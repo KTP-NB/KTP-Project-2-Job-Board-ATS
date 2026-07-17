@@ -1,0 +1,34 @@
+"use client";
+
+import React, { useState } from 'react';
+import Image from 'next/image';
+
+export default function GalleryGridClient({ images = [], initialLoad = 20 }) {
+  const [count, setCount] = useState(initialLoad);
+
+  const visible = images.slice(0, count);
+
+  const handleLoadMore = () => {
+    setCount((c) => Math.min(images.length, c + 20));
+  };
+
+  return (
+    <div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {visible.map((src, idx) => (
+          <div key={idx} className="w-full h-48 sm:h-56 md:h-48 lg:h-56 relative rounded overflow-hidden bg-gray-100">
+            <Image src={src} alt={`gallery-${idx}`} fill sizes="(max-width: 768px) 45vw, 25vw" quality={100} style={{ objectFit: 'cover' }} loading="lazy" />
+          </div>
+        ))}
+      </div>
+
+      {count < images.length && (
+        <div className="flex justify-center mt-8">
+          <button onClick={handleLoadMore} className="inline-flex items-center rounded-full bg-blue-600/90 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-500 transition">
+            Load more
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
