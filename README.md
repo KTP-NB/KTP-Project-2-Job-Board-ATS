@@ -38,6 +38,38 @@ The internal mock careers source for future scraper work lives at:
 /api/mock-careers/jobs
 ```
 
+Phase 2 adds the mock ingestion pipeline:
+
+```bash
+POST /api/job-board/scrape/mock-careers
+GET  /api/job-board/jobs
+GET  /api/job-board/jobs/[id]
+GET  /api/job-board/saved-jobs
+POST /api/job-board/saved-jobs
+DELETE /api/job-board/saved-jobs
+GET  /api/job-board/applications
+POST /api/job-board/applications
+```
+
+The Job Board UI supports search, filters, posted-today filtering, saved jobs,
+application tracking, per-page selection, and bottom pagination. Phase 2 still
+uses the internal mock careers platform as the only active source; external
+source adapters are scaffolded for later live scraping work.
+
+Phase 3 adds deterministic ATS resume analysis:
+
+```bash
+POST /api/job-board/ats-analyze
+GET  /api/job-board/ats-history
+GET  /api/job-board/ats-history/[id]
+/job-board/ats
+```
+
+ATS analysis uses the logged-in member's latest PDF resume from Supabase Storage,
+caches parsed resume text in `job_board_resume_parses`, and stores deterministic
+job-specific or role-specific results in `job_board_ats_analyses`. No AI/Ollama
+integration is used in this phase.
+
 Testing currently uses Node's built-in test runner to avoid adding new test
 dependencies during Phase 1:
 

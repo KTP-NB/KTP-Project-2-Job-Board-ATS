@@ -49,6 +49,7 @@ service-account*.json
 credentials.json
 .firebase/
 .netlify/
+supabase/.temp/
 .env
 !.env.example
 

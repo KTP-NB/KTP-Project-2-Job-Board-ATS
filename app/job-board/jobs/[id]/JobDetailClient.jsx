@@ -1,0 +1,111 @@
+'use client';
+
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { jobBoardApi } from '@/lib/job-board/clientFetch';
+import AtsResultPanel from '../../components/AtsResultPanel';
+import JobBoardLoading from '../../components/JobBoardLoading';
+
+export default function JobDetailClient({ jobId }) {
+  const [job, setJob] = useState(null);
+  const [analysis, setAnalysis] = useState(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [error, setError] = useState('');
+  const [analysisError, setAnalysisError] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadJob() {
+      try {
+        const data = await jobBoardApi(`/api/job-board/jobs/${jobId}`);
+        if (isMounted) setJob(data.job);
+      } catch (err) {
+        if (isMounted) setError(err.message || 'Unable to load job.');
+      }
+    }
+    loadJob();
+    return () => {
+      isMounted = false;
+    };
+  }, [jobId]);
+
+  if (error) return <p className="rounded-xl bg-red-500/15 px-4 py-3 text-sm font-bold text-red-100">{error}</p>;
+  if (!job) return <JobBoardLoading />;
+
+  return (
+    <div className="space-y-6">
+      <article className="rounded-2xl border border-white/10 bg-white/[0.06] p-6 text-white shadow-xl backdrop-blur md:p-8">
+        <Link href="/job-board" className="text-sm font-bold text-blue-200 hover:text-white">
+          Back to Job Board
+        </Link>
+        <header className="mt-6 border-b border-white/10 pb-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-[0.25em] text-blue-200">{job.company}</p>
+              <h1 className="mt-2 text-4xl font-black tracking-tight md:text-5xl">{job.title}</h1>
+            </div>
+            <button
+              type="button"
+              onClick={runJobAnalysis}
+              disabled={analyzing}
+              className="rounded-full bg-blue-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {analyzing ? 'Analyzing...' : 'Analyze resume'}
+            </button>
+          </div>
+          <p className="mt-5 text-base leading-7 text-blue-50/80">{job.description}</p>
+          <div className="mt-5 flex flex-wrap gap-2 text-xs font-bold uppercase tracking-wide text-blue-50">
+            <span className="rounded-full bg-blue-500/25 px-3 py-1">{job.location}</span>
+            <span className="rounded-full bg-blue-500/25 px-3 py-1">{formatOption(job.workplaceType)}</span>
+            <span className="rounded-full bg-blue-500/25 px-3 py-1">{formatOption(job.employmentType)}</span>
+            <span className="rounded-full bg-blue-500/25 px-3 py-1">{formatOption(job.careerCategory)}</span>
+            {job.salaryRange ? <span className="rounded-full bg-blue-500/25 px-3 py-1">{job.salaryRange}</span> : null}
+          </div>
+          {analysisError ? <p className="mt-5 rounded-xl bg-red-500/15 px-4 py-3 text-sm font-bold text-red-100">{analysisError}</p> : null}
+        </header>
+
+        <JobSection title="Responsibilities" items={job.responsibilities} />
+        <JobSection title="Qualifications" items={job.qualifications} />
+        <JobSection title="Benefits" items={job.benefits} />
+      </article>
+
+      {analysis ? <AtsResultPanel analysis={analysis} /> : null}
+    </div>
+  );
+
+  async function runJobAnalysis() {
+    setAnalyzing(true);
+    setAnalysisError('');
+    try {
+      const data = await jobBoardApi('/api/job-board/ats-analyze', {
+        method: 'POST',
+        body: JSON.stringify({ jobId }),
+      });
+      setAnalysis(data.analysis);
+    } catch (err) {
+      setAnalysisError(err.message || 'Unable to analyze resume.');
+    } finally {
+      setAnalyzing(false);
+    }
+  }
+}
+
+function JobSection({ title, items }) {
+  if (!items?.length) return null;
+  return (
+    <section className="border-b border-white/10 py-6 last:border-b-0">
+      <h2 className="text-xl font-black">{title}</h2>
+      <ul className="mt-4 space-y-3 text-sm leading-6 text-blue-50/80">
+        {items.map((item) => (
+          <li key={item} className="rounded-xl bg-slate-950/25 px-4 py-3">
+            {item}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function formatOption(value) {
+  return String(value || '').replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+}

@@ -7,6 +7,7 @@ const links = [
   { href: '/job-board', label: 'Dashboard' },
   { href: '/job-board/saved', label: 'Saved' },
   { href: '/job-board/applications', label: 'Applications' },
+  { href: '/job-board/ats', label: 'ATS' },
   { href: '/job-board/recommendations', label: 'Recommendations' },
   { href: '/job-board/settings', label: 'Settings' },
 ];
