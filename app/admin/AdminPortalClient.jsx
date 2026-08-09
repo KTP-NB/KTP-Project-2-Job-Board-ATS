@@ -647,10 +647,9 @@ function JobBoardAdminPanel() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-bold mb-1">Job Board Operations</h2>
-          <p className="text-white/50 text-sm">Monitor mock ingestion, recommendations, notifications, and usage analytics.</p>
+          <p className="text-white/50 text-sm">Monitor GitHub ingestion, recommendations, notifications, and usage analytics.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <AdminActionButton busy={busy} label="Run scrape" onClick={() => runAction('Run scrape', '/api/job-board/admin/scrape')} />
           <AdminActionButton busy={busy} label="Run all GitHub" onClick={() => runAction('Run all GitHub', '/api/job-board/admin/github-ingest')} />
           <AdminActionButton busy={busy} label="Refresh recommendations" onClick={() => runAction('Refresh recommendations', '/api/job-board/admin/recommendations/refresh')} />
           <AdminActionButton busy={busy} label="Generate digest" onClick={() => runAction('Generate digest', '/api/job-board/admin/digest')} />
@@ -672,7 +671,6 @@ function JobBoardAdminPanel() {
           </div>
 
           <div className="grid gap-4 lg:grid-cols-3">
-            <AdminList title="Recent scraper runs" rows={overview.scraperRuns} fields={['source', 'status', 'jobs_seen', 'jobs_created', 'jobs_updated']} />
             <AdminList title="GitHub ingestion runs" rows={overview.ingestionRuns} fields={['source_name', 'status', 'fetched_count', 'inserted_count', 'updated_count']} />
             <AdminList title="Notification logs" rows={overview.notificationLogs} fields={['type', 'status', 'channel', 'subject']} />
           </div>
