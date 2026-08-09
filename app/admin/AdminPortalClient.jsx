@@ -561,14 +561,21 @@ function formatTimeLimit(minutes) {
 
 function JobBoardAdminPanel() {
   const [overview, setOverview] = useState(null);
+  const [sources, setSources] = useState([]);
   const [busy, setBusy] = useState(null);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
   const loadOverview = useCallback(() => {
     setError('');
-    jobBoardApi('/api/job-board/admin/overview')
-      .then(setOverview)
+    Promise.all([
+      jobBoardApi('/api/job-board/admin/overview'),
+      jobBoardApi('/api/job-board/admin/sources'),
+    ])
+      .then(([overviewData, sourceData]) => {
+        setOverview(overviewData);
+        setSources(sourceData.sources || []);
+      })
       .catch((err) => setError(err.message || 'Unable to load Job Board admin data.'));
   }, []);
 
@@ -591,6 +598,42 @@ function JobBoardAdminPanel() {
     }
   }
 
+  async function toggleSource(source) {
+    setBusy(source.id);
+    setError('');
+    setMessage('');
+    try {
+      await jobBoardApi('/api/job-board/admin/sources', {
+        method: 'PATCH',
+        body: JSON.stringify({ sourceId: source.id, enabled: !source.enabled }),
+      });
+      setMessage(`${source.source_name} ${source.enabled ? 'disabled' : 'enabled'}.`);
+      await loadOverview();
+    } catch (err) {
+      setError(err.message || 'Unable to update source.');
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function runGithubSource(source) {
+    setBusy(source.id);
+    setError('');
+    setMessage('');
+    try {
+      const result = await jobBoardApi('/api/job-board/admin/github-ingest', {
+        method: 'POST',
+        body: JSON.stringify({ sourceId: source.id }),
+      });
+      setMessage(`GitHub ingestion complete: ${summarizeResult(result.summary)}`);
+      await loadOverview();
+    } catch (err) {
+      setError(err.message || 'GitHub ingestion failed.');
+    } finally {
+      setBusy(null);
+    }
+  }
+
   if (!overview && !error) {
     return (
       <div className="flex justify-center py-20">
@@ -608,6 +651,7 @@ function JobBoardAdminPanel() {
         </div>
         <div className="flex flex-wrap gap-2">
           <AdminActionButton busy={busy} label="Run scrape" onClick={() => runAction('Run scrape', '/api/job-board/admin/scrape')} />
+          <AdminActionButton busy={busy} label="Run all GitHub" onClick={() => runAction('Run all GitHub', '/api/job-board/admin/github-ingest')} />
           <AdminActionButton busy={busy} label="Refresh recommendations" onClick={() => runAction('Refresh recommendations', '/api/job-board/admin/recommendations/refresh')} />
           <AdminActionButton busy={busy} label="Generate digest" onClick={() => runAction('Generate digest', '/api/job-board/admin/digest')} />
         </div>
@@ -629,7 +673,59 @@ function JobBoardAdminPanel() {
 
           <div className="grid gap-4 lg:grid-cols-3">
             <AdminList title="Recent scraper runs" rows={overview.scraperRuns} fields={['source', 'status', 'jobs_seen', 'jobs_created', 'jobs_updated']} />
+            <AdminList title="GitHub ingestion runs" rows={overview.ingestionRuns} fields={['source_name', 'status', 'fetched_count', 'inserted_count', 'updated_count']} />
             <AdminList title="Notification logs" rows={overview.notificationLogs} fields={['type', 'status', 'channel', 'subject']} />
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+            <div className="flex flex-col gap-1">
+              <h3 className="text-sm font-black uppercase tracking-wide text-blue-100">GitHub job sources</h3>
+              <p className="text-sm text-white/50">Enable, disable, or run one configured source without deploying code.</p>
+            </div>
+            <div className="mt-4 grid gap-3 lg:grid-cols-2">
+              {sources.length ? sources.map((source) => (
+                <div key={source.id} className="rounded-lg bg-slate-950/30 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-black text-white">{source.source_name}</p>
+                      <p className="mt-1 text-xs text-white/50">{source.provider} / {source.repository_owner}/{source.repository_name}</p>
+                    </div>
+                    <span className={`rounded-full px-3 py-1 text-xs font-black ${source.enabled ? 'bg-emerald-400/15 text-emerald-100' : 'bg-white/10 text-white/50'}`}>
+                      {source.enabled ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-white/65">
+                    <p><span className="font-bold text-white/85">Career:</span> {formatAdminLabel(source.career_category)}</p>
+                    <p><span className="font-bold text-white/85">Type:</span> {formatAdminLabel(source.employment_type)}</p>
+                    <p><span className="font-bold text-white/85">Last success:</span> {formatAdminDate(source.last_success_at)}</p>
+                    <p><span className="font-bold text-white/85">Failures:</span> {source.consecutive_failures || 0}</p>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => toggleSource(source)}
+                      disabled={Boolean(busy)}
+                      className="rounded-lg border border-white/15 px-3 py-2 text-xs font-bold text-white/80 hover:bg-white/10 disabled:opacity-60"
+                    >
+                      {source.enabled ? 'Disable' : 'Enable'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => runGithubSource(source)}
+                      disabled={Boolean(busy)}
+                      className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-500 disabled:opacity-60"
+                    >
+                      {busy === source.id ? 'Working...' : 'Run source'}
+                    </button>
+                  </div>
+                </div>
+              )) : (
+                <p className="text-sm text-white/50">No GitHub sources configured.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-1">
             <div className="rounded-xl border border-white/10 bg-white/5 p-4">
               <h3 className="text-sm font-black uppercase tracking-wide text-blue-100">30-day analytics</h3>
               <div className="mt-3 space-y-2">
@@ -687,6 +783,11 @@ function AdminList({ title, rows, fields }) {
 
 function formatAdminLabel(value) {
   return String(value || '').replaceAll('_', ' ').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function formatAdminDate(value) {
+  if (!value) return 'never';
+  return new Date(value).toLocaleString();
 }
 
 function summarizeResult(result) {
