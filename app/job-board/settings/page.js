@@ -1,10 +1,5 @@
-import JobBoardEmptyState from '../components/JobBoardEmptyState';
+import NotificationSettingsClient from './NotificationSettingsClient';
 
 export default function JobBoardSettingsPage() {
-  return (
-    <JobBoardEmptyState
-      title="Notification preferences will appear here"
-      message="Members will manage job alerts and communication settings from this view."
-    />
-  );
+  return <NotificationSettingsClient />;
 }

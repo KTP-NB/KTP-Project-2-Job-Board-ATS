@@ -2,15 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-
-const links = [
-  { href: '/job-board', label: 'Dashboard' },
-  { href: '/job-board/saved', label: 'Saved' },
-  { href: '/job-board/applications', label: 'Applications' },
-  { href: '/job-board/ats', label: 'ATS' },
-  { href: '/job-board/recommendations', label: 'Recommendations' },
-  { href: '/job-board/settings', label: 'Settings' },
-];
+import { JOB_BOARD_NAV_LINKS } from '@/lib/job-board/navigation';
 
 export default function JobBoardNav() {
   const pathname = usePathname();
@@ -20,7 +12,7 @@ export default function JobBoardNav() {
       aria-label="Job Board"
       className="flex max-w-full gap-2 overflow-x-auto rounded-2xl border border-white/10 bg-white/[0.06] p-2 backdrop-blur"
     >
-      {links.map((link) => {
+      {JOB_BOARD_NAV_LINKS.map((link) => {
         const isActive = pathname === link.href;
         return (
           <Link

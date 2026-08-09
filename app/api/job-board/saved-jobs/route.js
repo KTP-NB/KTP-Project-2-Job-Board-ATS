@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireJobBoardUser } from '@/lib/job-board/auth';
 import { getJobBoardServiceClient } from '@/lib/job-board/supabaseServer';
 import { jsonError, readJson } from '@/lib/job-board/apiResponses';
+import { logJobBoardEvent } from '@/lib/job-board/events';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -41,6 +42,12 @@ export async function POST(request) {
     .single();
 
   if (error) return jsonError(error.message, 500);
+  await logJobBoardEvent(service, {
+    userId: auth.user.id,
+    eventType: 'job_saved',
+    entityType: 'job',
+    entityId: body.jobId,
+  });
   return NextResponse.json({ savedJob: data });
 }
 
@@ -59,5 +66,11 @@ export async function DELETE(request) {
     .eq('job_id', body.jobId);
 
   if (error) return jsonError(error.message, 500);
+  await logJobBoardEvent(service, {
+    userId: auth.user.id,
+    eventType: 'job_unsaved',
+    entityType: 'job',
+    entityId: body.jobId,
+  });
   return NextResponse.json({ ok: true });
 }

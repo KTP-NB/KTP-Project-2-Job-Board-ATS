@@ -70,6 +70,27 @@ caches parsed resume text in `job_board_resume_parses`, and stores deterministic
 job-specific or role-specific results in `job_board_ats_analyses`. No AI/Ollama
 integration is used in this phase.
 
+Phase 4 adds in-app notifications, deterministic recommendation delivery,
+Job Board admin operations, and usage analytics:
+
+```bash
+GET   /api/job-board/notifications
+PATCH /api/job-board/notifications
+GET   /api/job-board/notification-preferences
+PUT   /api/job-board/notification-preferences
+GET   /api/job-board/recommendations
+POST  /api/job-board/recommendations
+POST  /api/job-board/events
+GET   /api/job-board/admin/overview
+POST  /api/job-board/admin/scrape
+POST  /api/job-board/admin/recommendations/refresh
+POST  /api/job-board/admin/digest
+```
+
+Email delivery is intentionally framework-only in Phase 4. In-app notifications
+are delivered now, while email log rows are marked `email_skipped` or
+`email_pending` for a future Netlify Functions sender.
+
 Testing currently uses Node's built-in test runner to avoid adding new test
 dependencies during Phase 1:
 

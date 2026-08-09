@@ -9,6 +9,7 @@ import Tabs from '@/components/Tabs';
 import { useAuth } from '@/components/authprovider';
 import { hasSupabaseConfig, supabase } from '@/lib/supabase';
 import { api } from '@/lib/coderank/clientFetch';
+import { jobBoardApi } from '@/lib/job-board/clientFetch';
 
 /* ─── Positions that grant Admin Portal access ─── */
 const ADMIN_POSITIONS = [
@@ -105,7 +106,7 @@ function AdminPortal() {
 
 /* ─── Admin Dashboard (tabbed layout — add more tabs later) ─── */
 // Add more tab names here as you build out the admin portal
-const ADMIN_TABS = ['Resumes', 'CodeRank'];
+const ADMIN_TABS = ['Resumes', 'CodeRank', 'Job Board'];
 
 function AdminDashboard() {
   const tabs = ADMIN_TABS;
@@ -149,6 +150,7 @@ function AdminDashboard() {
         <div className="mt-8">
           {activeTab === 'Resumes' && <ResumesPanel />}
           {activeTab === 'CodeRank' && <CodeRankPanel />}
+          {activeTab === 'Job Board' && <JobBoardAdminPanel />}
         </div>
       </FadeIn>
     </main>
@@ -549,4 +551,144 @@ function CodeRankPanel() {
 
 function formatTimeLimit(minutes) {
   return Number(minutes) > 0 ? `${minutes} min` : 'No time limit';
+}
+
+function JobBoardAdminPanel() {
+  const [overview, setOverview] = useState(null);
+  const [busy, setBusy] = useState(null);
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+
+  const loadOverview = useCallback(() => {
+    setError('');
+    jobBoardApi('/api/job-board/admin/overview')
+      .then(setOverview)
+      .catch((err) => setError(err.message || 'Unable to load Job Board admin data.'));
+  }, []);
+
+  useEffect(() => {
+    loadOverview();
+  }, [loadOverview]);
+
+  async function runAction(label, path) {
+    setBusy(label);
+    setError('');
+    setMessage('');
+    try {
+      const result = await jobBoardApi(path, { method: 'POST' });
+      setMessage(`${label} complete: ${summarizeResult(result)}`);
+      await loadOverview();
+    } catch (err) {
+      setError(err.message || `${label} failed.`);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  if (!overview && !error) {
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="w-10 h-10 text-white/60 animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-xl font-bold mb-1">Job Board Operations</h2>
+          <p className="text-white/50 text-sm">Monitor mock ingestion, recommendations, notifications, and usage analytics.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <AdminActionButton busy={busy} label="Run scrape" onClick={() => runAction('Run scrape', '/api/job-board/admin/scrape')} />
+          <AdminActionButton busy={busy} label="Refresh recommendations" onClick={() => runAction('Refresh recommendations', '/api/job-board/admin/recommendations/refresh')} />
+          <AdminActionButton busy={busy} label="Generate digest" onClick={() => runAction('Generate digest', '/api/job-board/admin/digest')} />
+        </div>
+      </div>
+
+      {message && <div className="rounded-xl border border-emerald-300/25 bg-emerald-400/10 px-5 py-4 text-sm text-emerald-100">{message}</div>}
+      {error && <div className="rounded-xl border border-red-300/25 bg-red-400/10 px-5 py-4 text-sm text-red-100">{error}</div>}
+
+      {overview && (
+        <>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            {Object.entries(overview.counts || {}).map(([key, value]) => (
+              <div key={key} className="rounded-xl border border-white/10 bg-white/5 p-4">
+                <p className="text-xs uppercase tracking-wide text-blue-100/70">{formatAdminLabel(key)}</p>
+                <p className="mt-2 text-3xl font-black">{value}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-3">
+            <AdminList title="Recent scraper runs" rows={overview.scraperRuns} fields={['source', 'status', 'jobs_seen', 'jobs_created', 'jobs_updated']} />
+            <AdminList title="Notification logs" rows={overview.notificationLogs} fields={['type', 'status', 'channel', 'subject']} />
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <h3 className="text-sm font-black uppercase tracking-wide text-blue-100">30-day analytics</h3>
+              <div className="mt-3 space-y-2">
+                {Object.entries(overview.analytics?.counts || {}).map(([key, value]) => (
+                  <div key={key} className="flex items-center justify-between text-sm">
+                    <span className="text-white/70">{formatAdminLabel(key)}</span>
+                    <span className="font-bold">{value}</span>
+                  </div>
+                ))}
+                {!Object.keys(overview.analytics?.counts || {}).length && (
+                  <p className="text-sm text-white/50">No events logged yet.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function AdminActionButton({ busy, label, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={Boolean(busy)}
+      className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      {busy === label ? 'Working...' : label}
+    </button>
+  );
+}
+
+function AdminList({ title, rows, fields }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+      <h3 className="text-sm font-black uppercase tracking-wide text-blue-100">{title}</h3>
+      <div className="mt-3 space-y-3">
+        {rows?.length ? rows.map((row) => (
+          <div key={row.id} className="rounded-lg bg-slate-950/30 p-3">
+            {fields.map((field) => (
+              <p key={field} className="text-xs text-white/65">
+                <span className="font-bold text-white/85">{formatAdminLabel(field)}:</span> {String(row[field] ?? 'none')}
+              </p>
+            ))}
+          </div>
+        )) : (
+          <p className="text-sm text-white/50">No rows yet.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function formatAdminLabel(value) {
+  return String(value || '').replaceAll('_', ' ').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function summarizeResult(result) {
+  if (!result || typeof result !== 'object') return 'done';
+  return Object.entries(result)
+    .map(([key, value]) => {
+      if (value && typeof value === 'object') return `${formatAdminLabel(key)} ${summarizeResult(value)}`;
+      return `${formatAdminLabel(key)} ${value}`;
+    })
+    .join(', ');
 }

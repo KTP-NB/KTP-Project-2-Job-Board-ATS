@@ -3,6 +3,7 @@ import { requireJobBoardUser } from '@/lib/job-board/auth';
 import { APPLICATION_STATUSES } from '@/lib/job-board/constants';
 import { getJobBoardServiceClient } from '@/lib/job-board/supabaseServer';
 import { jsonError, readJson } from '@/lib/job-board/apiResponses';
+import { logJobBoardEvent } from '@/lib/job-board/events';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -54,5 +55,12 @@ export async function POST(request) {
     .single();
 
   if (error) return jsonError(error.message, 500);
+  await logJobBoardEvent(service, {
+    userId: auth.user.id,
+    eventType: 'application_status_updated',
+    entityType: 'job',
+    entityId: body.jobId,
+    metadata: { status, result: body.result || null },
+  });
   return NextResponse.json({ application: data });
 }

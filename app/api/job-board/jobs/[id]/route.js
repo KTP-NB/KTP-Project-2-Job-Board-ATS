@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireJobBoardUser } from '@/lib/job-board/auth';
 import { getJobBoardServiceClient } from '@/lib/job-board/supabaseServer';
 import { toJobSummary } from '@/lib/job-board/models';
+import { logJobBoardEvent } from '@/lib/job-board/events';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -21,6 +22,13 @@ export async function GET(request, { params }) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!job) return NextResponse.json({ error: 'Job not found' }, { status: 404 });
+
+  await logJobBoardEvent(service, {
+    userId: auth.user.id,
+    eventType: 'job_viewed',
+    entityType: 'job',
+    entityId: job.id,
+  });
 
   const [{ data: saved }, { data: application }] = await Promise.all([
     service
