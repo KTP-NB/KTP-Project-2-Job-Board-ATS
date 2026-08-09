@@ -23,6 +23,11 @@ function hasAdminAccess(position) {
   return ADMIN_POSITIONS.some((admin) => pos.includes(admin));
 }
 
+function hasDevJobBoardAdminAccess() {
+  return process.env.NODE_ENV !== 'production'
+    && process.env.NEXT_PUBLIC_JOB_BOARD_DEV_ADMIN_ENABLED === 'true';
+}
+
 /* ─── Main Export ─── */
 export default function AdminPortalPage() {
   return (
@@ -77,6 +82,7 @@ function AdminPortal() {
   }, [user?.id, user?.email]);
 
   const isAuthorized = useMemo(() => hasAdminAccess(userPosition), [userPosition]);
+  const isDevJobBoardAdmin = !isAuthorized && hasDevJobBoardAdminAccess();
 
   if (checkingAccess) {
     return (
@@ -86,7 +92,7 @@ function AdminPortal() {
     );
   }
 
-  if (!isAuthorized) {
+  if (!isAuthorized && !isDevJobBoardAdmin) {
     return (
       <main className="min-h-screen flex items-center justify-center px-6 text-white">
         <FadeIn className="text-center max-w-md">
@@ -101,34 +107,34 @@ function AdminPortal() {
     );
   }
 
-  return <AdminDashboard />;
+  return <AdminDashboard devJobBoardOnly={isDevJobBoardAdmin} />;
 }
 
 /* ─── Admin Dashboard (tabbed layout — add more tabs later) ─── */
 // Add more tab names here as you build out the admin portal
 const ADMIN_TABS = ['Resumes', 'CodeRank', 'Job Board'];
 
-function AdminDashboard() {
-  const tabs = ADMIN_TABS;
-  const [activeTab, setActiveTab] = useState('Resumes');
+function AdminDashboard({ devJobBoardOnly = false }) {
+  const tabs = useMemo(() => (devJobBoardOnly ? ['Job Board'] : ADMIN_TABS), [devJobBoardOnly]);
+  const [activeTab, setActiveTab] = useState(devJobBoardOnly ? 'Job Board' : 'Resumes');
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const param = new URLSearchParams(window.location.search).get('tab');
-    if (ADMIN_TABS.includes(param)) setActiveTab(param);
+    if (tabs.includes(param)) setActiveTab(param);
     setHydrated(true);
-  }, []);
+  }, [tabs]);
 
   useEffect(() => {
     if (!hydrated) return;
     const url = new URL(window.location.href);
-    if (activeTab === 'Resumes') {
+    if (activeTab === 'Resumes' || devJobBoardOnly) {
       url.searchParams.delete('tab');
     } else {
       url.searchParams.set('tab', activeTab);
     }
     window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
-  }, [activeTab, hydrated]);
+  }, [activeTab, hydrated, devJobBoardOnly]);
 
   return (
     <main className="min-h-screen px-4 pb-20 pt-28 text-white md:pt-36">
@@ -139,7 +145,7 @@ function AdminDashboard() {
             Admin Portal
           </h1>
           <p className="mt-2 text-[1.1rem] text-[#bdbdbd] mb-3">
-            Manage members, resumes, and chapter operations
+            {devJobBoardOnly ? 'Development access for Job Board operations' : 'Manage members, resumes, and chapter operations'}
           </p>
         </div>
 
