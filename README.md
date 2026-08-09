@@ -30,18 +30,17 @@ Environment variables are documented in `.env.example`. The Job Board tables,
 RLS policies, indexes, foreign keys, and constraints are defined in
 `supabase/migrations/20260715_job_board_phase_1.sql`.
 
-The internal mock careers source for future scraper work lives at:
+The legacy sample careers source for scraper development has been retired from
+the member-facing workflow. Live GitHub sources are managed from the Job Board
+admin panel.
 
 ```bash
-/mock-careers
-/mock-careers/jobs/[id]
-/api/mock-careers/jobs
+/admin
 ```
 
-Phase 2 adds the mock ingestion pipeline:
+Phase 2 added the first ingestion pipeline and Job Board APIs:
 
 ```bash
-POST /api/job-board/scrape/mock-careers
 GET  /api/job-board/jobs
 GET  /api/job-board/jobs/[id]
 GET  /api/job-board/saved-jobs
@@ -52,9 +51,7 @@ POST /api/job-board/applications
 ```
 
 The Job Board UI supports search, filters, posted-today filtering, saved jobs,
-application tracking, per-page selection, and bottom pagination. Phase 2 still
-uses the internal mock careers platform as the only active source; external
-source adapters are scaffolded for later live scraping work.
+application tracking, per-page selection, and bottom pagination.
 
 Phase 3 adds deterministic ATS resume analysis:
 
@@ -82,7 +79,6 @@ GET   /api/job-board/recommendations
 POST  /api/job-board/recommendations
 POST  /api/job-board/events
 GET   /api/job-board/admin/overview
-POST  /api/job-board/admin/scrape
 POST  /api/job-board/admin/recommendations/refresh
 POST  /api/job-board/admin/digest
 ```

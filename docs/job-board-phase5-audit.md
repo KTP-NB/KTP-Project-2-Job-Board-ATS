@@ -212,17 +212,16 @@ The API currently accepts `body.result` in analytics metadata but the table does
 
 ## Current Ingestion and Deduplication
 
-The current ingestion stack is mock-careers oriented:
+The previous ingestion stack was sample-source oriented:
 
 - `lib/job-board/scraper/orchestrator.js`
-- `lib/job-board/scraper/sources/mockCareers.js`
 - `lib/job-board/scraper/normalize.js`
 - `lib/job-board/scraper/validate.js`
 - `lib/job-board/scraper/dedupe.js`
 - `lib/job-board/scraper/upsert.js`
 - future fixture adapters for Greenhouse, Lever, Ashby, and custom pages
 
-The mock-careers adapter fetches jobs through HTTP and returns `body.jobs`.
+The retired sample adapter fetched jobs through HTTP and returned `body.jobs`.
 
 The orchestrator flow is:
 
@@ -288,14 +287,9 @@ Phase 5 A2 should create `job_board_sources` and seed a small approved starter s
 
 There is no live GitHub ingestion API yet.
 
-Existing ingestion endpoints are:
+The retired local sample ingestion endpoints have been removed.
 
-- `POST /api/job-board/scrape/mock-careers`
-- `POST /api/job-board/admin/scrape`
-
-Those trigger mock ingestion only.
-
-Phase 5 should add GitHub ingestion separately and preserve mock ingestion for local testing.
+Phase 5 adds GitHub ingestion through the source registry and admin controls.
 
 Confirmed future direction:
 
@@ -396,14 +390,14 @@ Recommended reusable files and patterns:
 - `lib/job-board/logger.js` for console logging
 - `lib/job-board/events.js` for analytics events
 - `lib/job-board/scraper/normalize.js` and `validate.js` as references, not as final GitHub parser design
-- `lib/job-board/scraper/orchestrator.js` as a mock-ingestion reference
+- `lib/job-board/scraper/orchestrator.js` as a legacy ingestion reference
 - `/admin` Job Board tab for manual operations
 - Node test structure under `lib/job-board/__tests__`
 - scraper fixtures under `tests/fixtures/scrapers`
 
 ## Recommended Phase 5 File Locations
 
-Use a new ingestion namespace rather than mixing live GitHub logic directly into the mock scraper folder:
+Use a new ingestion namespace rather than mixing live GitHub logic directly into the legacy scraper folder:
 
 - `lib/job-board/ingestion/github/sourceRegistry.js`
 - `lib/job-board/ingestion/github/fetchRepository.js`
@@ -546,11 +540,11 @@ Current Job Board tests cover:
 
 - auth token extraction
 - validation helpers
-- mock scraper normalization/validation/dedupe
+- sample-source normalization/validation/dedupe
 - future source fixture adapters
 - deterministic ATS parsing/scoring
 - Phase 4 admin access, analytics summary, and navigation
-- mock careers jobs
+- retired sample-source jobs
 
 Existing fixtures:
 
@@ -567,7 +561,7 @@ Phase 5 should add GitHub markdown/table fixtures for Jobright and Simplify befo
 - Existing enum checks will reject Phase 5 categories such as `data_science`, `machine_learning`, `finance`, `consulting`, and `new_grad`.
 - Current `normalized_fingerprint` includes location, but Phase 5 dedupe says location must not be mandatory.
 - `job_board_jobs.source_payload` stores one source payload on the canonical job; multi-source traceability needs `job_board_source_links`.
-- Existing mock scraper updates entire job payload and may overwrite useful fields with less precise data; Phase 5 update rules should fill missing data conservatively.
+- Existing legacy scraper updates entire job payload and may overwrite useful fields with less precise data; Phase 5 update rules should fill missing data conservatively.
 - GitHub ingestion must not rely on exact daily timing; use the confirmed 3-day lookback and idempotent source links.
 - GitHub unauthenticated fallback must be local-only to avoid production rate-limit surprises.
 - Supabase Edge Functions cannot directly reuse Node/Next modules; shared logic may need Deno-compatible copies or a carefully isolated implementation.
@@ -580,7 +574,7 @@ Phase 5 should add GitHub markdown/table fixtures for Jobright and Simplify befo
 Proceed in the planned order:
 
 1. A2: create `job_board_sources`, expand enum constraints, seed enabled starter sources, and add source registry helpers/tests.
-2. A3: add GitHub repository fetcher with server-only `GITHUB_INGEST_TOKEN`, local-only unauthenticated fallback, mocked tests, and no parsing yet.
+2. A3: add GitHub repository fetcher with server-only `GITHUB_INGEST_TOKEN`, local-only unauthenticated fallback, fixture-backed tests, and no parsing yet.
 3. A4/A5: add deterministic Jobright and Simplify parsers from fixtures.
 4. A6: add canonical URL/fingerprint dedupe and `job_board_source_links`.
 5. A7: build the full ingestion service.
