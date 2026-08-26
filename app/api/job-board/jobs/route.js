@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireJobBoardUser } from '@/lib/job-board/auth';
 import { DEFAULT_JOBS_PER_PAGE, JOBS_PER_PAGE_OPTIONS } from '@/lib/job-board/constants';
 import { getJobBoardServiceClient } from '@/lib/job-board/supabaseServer';
-import { toJobSummary } from '@/lib/job-board/models';
+import { inferDisplayEmploymentType, normalizeDisplayCareerCategory, toJobSummary } from '@/lib/job-board/models';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -48,10 +48,10 @@ export async function GET(request) {
   }
 
   const category = params.get('category');
-  if (category) query = query.eq('career_category', category);
+  if (category) query = query.in('career_category', categoryDbValues(category));
 
   const employmentType = params.get('employmentType');
-  if (employmentType) query = query.eq('employment_type', employmentType);
+  if (employmentType) query = query.in('employment_type', employmentTypeDbValues(employmentType));
 
   const workplaceType = params.get('workplaceType');
   if (workplaceType) query = query.eq('workplace_type', workplaceType);
@@ -115,13 +115,13 @@ async function getApplicationsByJobId(service, userId, jobIds) {
 async function getFilterOptions(service) {
   const { data } = await service
     .from('job_board_jobs')
-    .select('company, career_category, employment_type, workplace_type')
+    .select('company, career_category, employment_type, workplace_type, title, source_url, source_payload')
     .eq('status', 'open');
 
   return {
     companies: uniqueSorted(data?.map((job) => job.company)),
-    categories: uniqueSorted(data?.map((job) => job.career_category)),
-    employmentTypes: uniqueSorted(data?.map((job) => job.employment_type)),
+    categories: uniqueSorted(data?.map((job) => normalizeDisplayCareerCategory(job.career_category))),
+    employmentTypes: uniqueSorted(data?.map((job) => inferDisplayEmploymentType(job))),
     workplaceTypes: uniqueSorted(data?.map((job) => job.workplace_type)),
   };
 }
@@ -133,4 +133,18 @@ function uniqueSorted(values = []) {
 function startOfTodayIso() {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+}
+
+function categoryDbValues(category) {
+  const values = {
+    product_management: ['product_management', 'product'],
+    business_analytics: ['business_analytics', 'business'],
+    machine_learning_ai: ['machine_learning_ai', 'machine_learning'],
+  };
+  return values[category] || [category];
+}
+
+function employmentTypeDbValues(employmentType) {
+  if (employmentType === 'internship') return ['internship', 'new_grad'];
+  return [employmentType];
 }

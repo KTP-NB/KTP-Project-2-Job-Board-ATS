@@ -1,6 +1,11 @@
 'use client';
 
-import { JOBS_PER_PAGE_OPTIONS } from '@/lib/job-board/constants';
+import {
+  CAREER_CATEGORIES,
+  CAREER_CATEGORY_GROUPS,
+  JOB_EMPLOYMENT_TYPES,
+  JOBS_PER_PAGE_OPTIONS,
+} from '@/lib/job-board/constants';
 
 export default function JobFilters({ query, filters, perPage, onQueryChange, onPerPageChange }) {
   return (
@@ -11,8 +16,14 @@ export default function JobFilters({ query, filters, perPage, onQueryChange, onP
         placeholder="Search title, company, keywords"
         className="rounded-xl border border-white/15 bg-slate-950/30 px-4 py-3 text-sm text-white outline-none placeholder:text-blue-100/40 focus:border-blue-200/60"
       />
-      <Select label="Category" value={query.category} onChange={(value) => onQueryChange({ category: value })} options={filters.categories || []} />
-      <Select label="Type" value={query.employmentType} onChange={(value) => onQueryChange({ employmentType: value })} options={filters.employmentTypes || []} />
+      <Select
+        label="Category"
+        value={query.category}
+        onChange={(value) => onQueryChange({ category: value })}
+        options={mergeOptions(CAREER_CATEGORIES, filters.categories)}
+        groups={CAREER_CATEGORY_GROUPS}
+      />
+      <Select label="Role Type" value={query.employmentType} onChange={(value) => onQueryChange({ employmentType: value })} options={mergeOptions(JOB_EMPLOYMENT_TYPES, filters.employmentTypes)} />
       <Select label="Workplace" value={query.workplaceType} onChange={(value) => onQueryChange({ workplaceType: value })} options={filters.workplaceTypes || []} />
       <Select label="Company" value={query.company} onChange={(value) => onQueryChange({ company: value })} options={filters.companies || []} />
       <select
@@ -36,7 +47,17 @@ export default function JobFilters({ query, filters, perPage, onQueryChange, onP
   );
 }
 
-function Select({ label, value, onChange, options }) {
+function Select({ label, value, onChange, options, groups }) {
+  const optionSet = new Set(options);
+  const groupedOptions = groups
+    ?.map((group) => ({
+      ...group,
+      categories: group.categories.filter((category) => optionSet.has(category)),
+    }))
+    .filter((group) => group.categories.length);
+  const groupedValues = new Set(groupedOptions?.flatMap((group) => group.categories) || []);
+  const ungroupedOptions = options.filter((option) => !groupedValues.has(option));
+
   return (
     <select
       value={value}
@@ -45,7 +66,14 @@ function Select({ label, value, onChange, options }) {
       aria-label={label}
     >
       <option value="">{label}</option>
-      {options.map((option) => (
+      {groupedOptions?.map((group) => (
+        <optgroup key={group.label} label={group.label}>
+          {group.categories.map((option) => (
+            <option key={option} value={option}>{formatOption(option)}</option>
+          ))}
+        </optgroup>
+      ))}
+      {ungroupedOptions.map((option) => (
         <option key={option} value={option}>{formatOption(option)}</option>
       ))}
     </select>
@@ -54,4 +82,8 @@ function Select({ label, value, onChange, options }) {
 
 function formatOption(value) {
   return String(value || '').replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function mergeOptions(defaultOptions, availableOptions = []) {
+  return [...new Set([...(defaultOptions || []), ...(availableOptions || [])].filter(Boolean))];
 }

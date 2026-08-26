@@ -43,17 +43,31 @@ export default function JobDetailClient({ jobId }) {
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.25em] text-blue-200">{job.company}</p>
               <h1 className="mt-2 text-4xl font-black tracking-tight md:text-5xl">{job.title}</h1>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-blue-50/75">
+                {job.description || profileDescription(job)}
+              </p>
             </div>
-            <button
-              type="button"
-              onClick={runJobAnalysis}
-              disabled={analyzing}
-              className="rounded-full bg-blue-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {analyzing ? 'Analyzing...' : 'Analyze resume'}
-            </button>
+            <div className="flex shrink-0 flex-col gap-3 sm:flex-row lg:flex-col">
+              {job.applyUrl ? (
+                <a
+                  href={job.applyUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-full bg-white px-5 py-3 text-center text-sm font-bold text-slate-950 transition hover:bg-blue-100"
+                >
+                  Apply on company site
+                </a>
+              ) : null}
+              <button
+                type="button"
+                onClick={runJobAnalysis}
+                disabled={analyzing}
+                className="rounded-full bg-blue-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {analyzing ? 'Analyzing...' : 'Analyze resume'}
+              </button>
+            </div>
           </div>
-          <p className="mt-5 text-base leading-7 text-blue-50/80">{job.description}</p>
           <div className="mt-5 flex flex-wrap gap-2 text-xs font-bold uppercase tracking-wide text-blue-50">
             <span className="rounded-full bg-blue-500/25 px-3 py-1">{job.location}</span>
             <span className="rounded-full bg-blue-500/25 px-3 py-1">{formatOption(job.workplaceType)}</span>
@@ -108,4 +122,11 @@ function JobSection({ title, items }) {
 
 function formatOption(value) {
   return String(value || '').replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function profileDescription(job) {
+  const type = job.employmentType ? formatOption(job.employmentType) : 'Open';
+  const category = job.careerCategory ? formatOption(job.careerCategory) : 'professional';
+  const location = job.location || 'the listed location';
+  return `${type} ${category} role based in ${location}. Review the company posting for the latest responsibilities, requirements, and application instructions.`;
 }

@@ -634,6 +634,29 @@ function JobBoardAdminPanel() {
     }
   }
 
+  async function clearJobPostings() {
+    const confirmed = window.confirm(
+      'Archive all current Job Board postings? This removes them from member search but keeps saved jobs, applications, analytics, and source history.'
+    );
+    if (!confirmed) return;
+
+    setBusy('Clear postings');
+    setError('');
+    setMessage('');
+    try {
+      const result = await jobBoardApi('/api/job-board/admin/jobs/clear', {
+        method: 'POST',
+        body: JSON.stringify({ confirm: 'archive-job-postings' }),
+      });
+      setMessage(`Clear postings complete: archived ${result.archivedJobs || 0} jobs.`);
+      await loadOverview();
+    } catch (err) {
+      setError(err.message || 'Unable to clear job postings.');
+    } finally {
+      setBusy(null);
+    }
+  }
+
   if (!overview && !error) {
     return (
       <div className="flex justify-center py-20">
@@ -653,6 +676,7 @@ function JobBoardAdminPanel() {
           <AdminActionButton busy={busy} label="Run all GitHub" onClick={() => runAction('Run all GitHub', '/api/job-board/admin/github-ingest')} />
           <AdminActionButton busy={busy} label="Refresh recommendations" onClick={() => runAction('Refresh recommendations', '/api/job-board/admin/recommendations/refresh')} />
           <AdminActionButton busy={busy} label="Generate digest" onClick={() => runAction('Generate digest', '/api/job-board/admin/digest')} />
+          <AdminActionButton busy={busy} label="Clear postings" tone="danger" onClick={clearJobPostings} />
         </div>
       </div>
 
@@ -695,6 +719,8 @@ function JobBoardAdminPanel() {
                   <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-white/65">
                     <p><span className="font-bold text-white/85">Career:</span> {formatAdminLabel(source.career_category)}</p>
                     <p><span className="font-bold text-white/85">Type:</span> {formatAdminLabel(source.employment_type)}</p>
+                    <p><span className="font-bold text-white/85">Class:</span> {formatAdminLabel(source.source_classification || 'aggregate')}</p>
+                    <p><span className="font-bold text-white/85">Priority:</span> {source.priority}</p>
                     <p><span className="font-bold text-white/85">Last success:</span> {formatAdminDate(source.last_success_at)}</p>
                     <p><span className="font-bold text-white/85">Failures:</span> {source.consecutive_failures || 0}</p>
                   </div>
@@ -745,13 +771,17 @@ function JobBoardAdminPanel() {
   );
 }
 
-function AdminActionButton({ busy, label, onClick }) {
+function AdminActionButton({ busy, label, onClick, tone = 'primary' }) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={Boolean(busy)}
-      className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+      className={`rounded-xl px-4 py-2.5 text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${
+        tone === 'danger'
+          ? 'bg-red-600 hover:bg-red-500'
+          : 'bg-blue-600 hover:bg-blue-500'
+      }`}
     >
       {busy === label ? 'Working...' : label}
     </button>
