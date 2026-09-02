@@ -1,7 +1,6 @@
 -- Job Board / ATS Phase 5A GitHub ingestion run metrics.
 
 begin;
-
 create table if not exists public.job_board_ingestion_runs (
   id uuid primary key default gen_random_uuid(),
   source_id uuid references public.job_board_sources(id) on delete set null,
@@ -23,16 +22,11 @@ create table if not exists public.job_board_ingestion_runs (
   finished_at timestamptz,
   created_at timestamptz not null default now()
 );
-
 create index if not exists job_board_ingestion_runs_source_id_idx
   on public.job_board_ingestion_runs (source_id);
-
 create index if not exists job_board_ingestion_runs_status_idx
   on public.job_board_ingestion_runs (status);
-
 create index if not exists job_board_ingestion_runs_created_at_idx
   on public.job_board_ingestion_runs (created_at desc);
-
 alter table public.job_board_ingestion_runs enable row level security;
-
 commit;

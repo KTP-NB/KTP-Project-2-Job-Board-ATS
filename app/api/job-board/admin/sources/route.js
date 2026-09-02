@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireJobBoardAdmin } from '@/lib/job-board/auth';
 import { jsonError, readJson } from '@/lib/job-board/apiResponses';
 import { getJobBoardServiceClient } from '@/lib/job-board/supabaseServer';
+import { JOB_SOURCE_PROVIDERS } from '@/lib/job-board/ingestion/github/sourceRegistry';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -12,9 +13,18 @@ export async function GET(request) {
   if (auth.error) return auth.error;
 
   const service = getJobBoardServiceClient();
-  const { data, error } = await service
+  const provider = request.nextUrl.searchParams.get('provider');
+  if (provider && !JOB_SOURCE_PROVIDERS.includes(provider)) {
+    return jsonError('provider is invalid.');
+  }
+
+  let query = service
     .from('job_board_sources')
-    .select('*')
+    .select('*');
+
+  if (provider) query = query.eq('provider', provider);
+
+  const { data, error } = await query
     .order('priority', { ascending: true })
     .order('source_name', { ascending: true });
 

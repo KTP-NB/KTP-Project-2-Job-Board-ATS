@@ -1,12 +1,10 @@
 -- Job Board / ATS Phase 5A source registry.
 
 begin;
-
 update public.job_board_jobs
 set career_category = 'product_management',
     updated_at = now()
 where career_category = 'product';
-
 alter table public.job_board_jobs
   drop constraint if exists job_board_jobs_career_category_check,
   add constraint job_board_jobs_career_category_check
@@ -28,7 +26,6 @@ alter table public.job_board_jobs
       'hardware',
       'other'
     ));
-
 alter table public.job_board_jobs
   drop constraint if exists job_board_jobs_employment_type_check,
   add constraint job_board_jobs_employment_type_check
@@ -42,7 +39,6 @@ alter table public.job_board_jobs
       'apprenticeship',
       'other'
     ));
-
 create table if not exists public.job_board_sources (
   id uuid primary key default gen_random_uuid(),
   provider text not null check (provider in ('jobright', 'simplify')),
@@ -93,24 +89,17 @@ create table if not exists public.job_board_sources (
   updated_at timestamptz not null default now(),
   unique (provider, repository_owner, repository_name, career_category, employment_type)
 );
-
 create index if not exists job_board_sources_enabled_idx
   on public.job_board_sources (enabled, priority);
-
 create index if not exists job_board_sources_provider_idx
   on public.job_board_sources (provider);
-
 create index if not exists job_board_sources_repository_idx
   on public.job_board_sources (repository_owner, repository_name);
-
 create index if not exists job_board_sources_category_idx
   on public.job_board_sources (career_category);
-
 create index if not exists job_board_sources_employment_type_idx
   on public.job_board_sources (employment_type);
-
 alter table public.job_board_sources enable row level security;
-
 insert into public.job_board_sources (
   provider,
   source_name,
@@ -227,5 +216,4 @@ do update set
   parser_version = excluded.parser_version,
   metadata = excluded.metadata,
   updated_at = now();
-
 commit;

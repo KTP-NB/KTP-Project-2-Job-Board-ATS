@@ -570,7 +570,7 @@ function JobBoardAdminPanel() {
     setError('');
     Promise.all([
       jobBoardApi('/api/job-board/admin/overview'),
-      jobBoardApi('/api/job-board/admin/sources'),
+      jobBoardApi('/api/job-board/admin/sources?provider=intern_list'),
     ])
       .then(([overviewData, sourceData]) => {
         setOverview(overviewData);
@@ -616,19 +616,19 @@ function JobBoardAdminPanel() {
     }
   }
 
-  async function runGithubSource(source) {
+  async function runInternListSource(source) {
     setBusy(source.id);
     setError('');
     setMessage('');
     try {
-      const result = await jobBoardApi('/api/job-board/admin/github-ingest', {
+      const result = await jobBoardApi('/api/job-board/admin/intern-list-ingest', {
         method: 'POST',
         body: JSON.stringify({ sourceId: source.id }),
       });
-      setMessage(`GitHub ingestion complete: ${summarizeResult(result.summary)}`);
+      setMessage(`Intern List ingestion complete: ${summarizeResult(result.summary)}`);
       await loadOverview();
     } catch (err) {
-      setError(err.message || 'GitHub ingestion failed.');
+      setError(err.message || 'Intern List ingestion failed.');
     } finally {
       setBusy(null);
     }
@@ -670,10 +670,10 @@ function JobBoardAdminPanel() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-bold mb-1">Job Board Operations</h2>
-          <p className="text-white/50 text-sm">Monitor GitHub ingestion, recommendations, notifications, and usage analytics.</p>
+          <p className="text-white/50 text-sm">Monitor Intern List ingestion, recommendations, notifications, and usage analytics.</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <AdminActionButton busy={busy} label="Run all GitHub" onClick={() => runAction('Run all GitHub', '/api/job-board/admin/github-ingest')} />
+          <AdminActionButton busy={busy} label="Run US internships" onClick={() => runAction('Run US internships', '/api/job-board/admin/intern-list-ingest')} />
           <AdminActionButton busy={busy} label="Refresh recommendations" onClick={() => runAction('Refresh recommendations', '/api/job-board/admin/recommendations/refresh')} />
           <AdminActionButton busy={busy} label="Generate digest" onClick={() => runAction('Generate digest', '/api/job-board/admin/digest')} />
           <AdminActionButton busy={busy} label="Clear postings" tone="danger" onClick={clearJobPostings} />
@@ -695,14 +695,14 @@ function JobBoardAdminPanel() {
           </div>
 
           <div className="grid gap-4 lg:grid-cols-3">
-            <AdminList title="GitHub ingestion runs" rows={overview.ingestionRuns} fields={['source_name', 'status', 'fetched_count', 'inserted_count', 'updated_count']} />
+            <AdminList title="Ingestion runs" rows={overview.ingestionRuns} fields={['source_name', 'status', 'fetched_count', 'inserted_count', 'updated_count']} />
             <AdminList title="Notification logs" rows={overview.notificationLogs} fields={['type', 'status', 'channel', 'subject']} />
           </div>
 
           <div className="rounded-xl border border-white/10 bg-white/5 p-4">
             <div className="flex flex-col gap-1">
-              <h3 className="text-sm font-black uppercase tracking-wide text-blue-100">GitHub job sources</h3>
-              <p className="text-sm text-white/50">Enable, disable, or run one configured source without deploying code.</p>
+              <h3 className="text-sm font-black uppercase tracking-wide text-blue-100">Intern List sources</h3>
+              <p className="text-sm text-white/50">Enable, disable, or run one United States internship category without deploying code.</p>
             </div>
             <div className="mt-4 grid gap-3 lg:grid-cols-2">
               {sources.length ? sources.map((source) => (
@@ -710,7 +710,7 @@ function JobBoardAdminPanel() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-black text-white">{source.source_name}</p>
-                      <p className="mt-1 text-xs text-white/50">{source.provider} / {source.repository_owner}/{source.repository_name}</p>
+                      <p className="mt-1 text-xs text-white/50">{formatSourceDescription(source)}</p>
                     </div>
                     <span className={`rounded-full px-3 py-1 text-xs font-black ${source.enabled ? 'bg-emerald-400/15 text-emerald-100' : 'bg-white/10 text-white/50'}`}>
                       {source.enabled ? 'Enabled' : 'Disabled'}
@@ -735,7 +735,7 @@ function JobBoardAdminPanel() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => runGithubSource(source)}
+                      onClick={() => runInternListSource(source)}
                       disabled={Boolean(busy)}
                       className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-500 disabled:opacity-60"
                     >
@@ -744,7 +744,7 @@ function JobBoardAdminPanel() {
                   </div>
                 </div>
               )) : (
-                <p className="text-sm text-white/50">No GitHub sources configured.</p>
+                <p className="text-sm text-white/50">No Intern List sources configured.</p>
               )}
             </div>
           </div>
@@ -811,6 +811,15 @@ function AdminList({ title, rows, fields }) {
 
 function formatAdminLabel(value) {
   return String(value || '').replaceAll('_', ' ').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function formatSourceDescription(source) {
+  if (source.provider === 'intern_list') {
+    const country = source.metadata?.country || 'US';
+    const category = source.metadata?.internListCategory || source.repository_name;
+    return `Intern List / ${country} / ${category}`;
+  }
+  return `${source.provider} / ${source.repository_owner}/${source.repository_name}`;
 }
 
 function formatAdminDate(value) {

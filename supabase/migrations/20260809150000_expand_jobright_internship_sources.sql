@@ -1,17 +1,14 @@
 -- Expand Jobright internship source coverage and category taxonomy.
 
 begin;
-
 update public.job_board_jobs
 set career_category = 'machine_learning_ai',
     updated_at = now()
 where career_category = 'machine_learning';
-
 update public.job_board_jobs
 set career_category = 'business_analytics',
     updated_at = now()
 where career_category = 'business';
-
 alter table public.job_board_jobs
   drop constraint if exists job_board_jobs_career_category_check,
   add constraint job_board_jobs_career_category_check
@@ -45,7 +42,6 @@ alter table public.job_board_jobs
       'hardware',
       'other'
     ));
-
 alter table public.job_board_sources
   drop constraint if exists job_board_sources_career_category_check,
   add constraint job_board_sources_career_category_check
@@ -79,7 +75,6 @@ alter table public.job_board_sources
       'hardware',
       'other'
     ));
-
 insert into public.job_board_sources (
   provider,
   source_name,
@@ -126,5 +121,4 @@ do update set
   parser_version = excluded.parser_version,
   metadata = excluded.metadata,
   updated_at = now();
-
 commit;
