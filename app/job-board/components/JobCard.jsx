@@ -23,6 +23,24 @@ export default function JobCard({ job, onToggleSaved, onUpdateApplication }) {
         </div>
 
         <div className="flex shrink-0 flex-col gap-3 sm:flex-row lg:w-64 lg:flex-col">
+          {job.applyUrl ? (
+            <a
+              href={job.applyUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-full bg-white px-4 py-2 text-center text-sm font-bold text-slate-950 transition hover:bg-blue-100"
+            >
+              Apply
+            </a>
+          ) : (
+            <button
+              type="button"
+              disabled
+              className="cursor-not-allowed rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-white/45"
+            >
+              Apply
+            </button>
+          )}
           <button
             type="button"
             onClick={() => onToggleSaved(job)}
