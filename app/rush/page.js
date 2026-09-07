@@ -10,47 +10,36 @@ import FadeIn from "@/components/FadeIn";
 
 const events = [
   {
-    title: "Informational #1",
-    date: "Monday, January 26th • 9:00–10:00 PM",
+    title: "Meet the Brothers",
+    date: "Tuesday, September 8th • 9:30 PM",
     location: "TBD",
     image: "/images/homepicture13.png",
     description:
-      "Join us for an overview of what it means to be a brother of Kappa Theta Pi. Meet members, learn about rush, and ask questions in an open discussion format.",
+      "Get to know the brothers of Kappa Theta Pi in a casual setting. Learn about our community, values, and what rush has to offer.",
   },
   {
-    title: "Meet the Artists",
-    date: "Tuesday, January 27th • 9:00–10:00 PM",
+    title: "Brother Panel",
+    date: "Wednesday, September 9th • 9:30 PM",
     location: "TBD",
     image: "/images/homepicture12.png",
     description:
-      "Meet the brothers through short, rapid-fire conversations in a speed-dating style setup.",
+      "Hear directly from current brothers about their experiences in KTP — from rush and pledging to internships, projects, and campus life.",
   },
   {
-    title: "Informational #2",
-    date: "Wednesday, January 28th • 9:00-10:00 PM",
+    title: "Grand Prix Game Night",
+    date: "Thursday, September 10th • 9:30 PM",
     location: "TBD",
     image: "/images/homepicture3.JPG",
     description:
-      "Join us again for an overview of what it means to be a brother of Kappa Theta Pi. Meet members, learn about rush, and ask questions in an open discussion format.",
+      "Join us for a fun game night inspired by the Grand Prix. Compete, connect, and get to know the brothers in a relaxed, social atmosphere.",
   },
   {
-    title: "Paint the Set",
-    date: "Thursday, January 29th • 9:00–10:00 PM",
+    title: "Circuit Debate",
+    date: "Friday, September 11th • 9:30 PM",
     location: "TBD",
     image: "/images/homepicture2.JPG",
     description:
-      "A fun, low-pressure paint-and-sip event to create art and get to know the brothers.",
-  },
-   {
-    title: "Application Deadline",
-    date: "Thursday, January 29th • 11:59  PM",
-    location: "Online",
-    image: "/photos for ktp website/DSC09511.jpg",
-    description: "",  ctas: [
-    { label: "Apply Now", href: "http://forms.gle/knCAtjQDVHZ6KkRCA", variant: "primary" },
-   
-  ],
-
+      "Move around the room to four corners based on where you stand on tech and culture topics — agree, disagree, and everything in between. Rushees and brothers participate together in this interactive, get-to-know-you format.",
   },
 ];
 
@@ -183,7 +172,7 @@ export default function RushPage() {
       </a>
 
       <a
-        href="http://forms.gle/frWXJ9Ga6AZphLNu7"
+        href="https://docs.google.com/forms/d/1t-l5DeYSW5R66DDhs8iIR3DoueGZczG_Eji22dJZR-s/viewform?edit_requested=true"
         className="rounded-full border border-blue-300 px-8 py-3 text-blue-100 hover:bg-white/10 transition"
 
       >
