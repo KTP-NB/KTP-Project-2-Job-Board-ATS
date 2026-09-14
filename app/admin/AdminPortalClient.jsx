@@ -678,9 +678,10 @@ function JobBoardAdminPanel() {
         accepted: acc.accepted + (summary?.accepted || 0),
         inserted: acc.inserted + (summary?.inserted || 0),
         updated: acc.updated + (summary?.updated || 0),
+        skippedLocked: acc.skippedLocked + (summary?.skippedLocked || 0),
         failed: acc.failed + (summary?.failed || 0),
-      }), { accepted: 0, inserted: 0, updated: 0, failed: 0 });
-      setMessage(`H1B SWE ingestion complete: accepted ${totals.accepted}, inserted ${totals.inserted}, updated ${totals.updated}, failed ${totals.failed}.`);
+      }), { accepted: 0, inserted: 0, updated: 0, skippedLocked: 0, failed: 0 });
+      setMessage(`H1B SWE ingestion complete: accepted ${totals.accepted}, inserted ${totals.inserted}, updated ${totals.updated}, already running ${totals.skippedLocked}, failed ${totals.failed}.`);
       await loadOverview();
     } catch (err) {
       setError(err.message || 'H1B ingestion failed.');
@@ -865,6 +866,7 @@ function AdminActionButton({ busy, label, onClick, tone = 'primary' }) {
 }
 
 function SourceControlCard({ source, busy, onToggle, onRun }) {
+  const sourceLocked = isSourceLocked(source);
   return (
     <div className="rounded-lg bg-slate-950/30 p-4">
       <div className="flex items-start justify-between gap-3">
@@ -872,8 +874,8 @@ function SourceControlCard({ source, busy, onToggle, onRun }) {
           <p className="text-sm font-black text-white">{source.source_name}</p>
           <p className="mt-1 text-xs text-white/50">{formatSourceDescription(source)}</p>
         </div>
-        <span className={`rounded-full px-3 py-1 text-xs font-black ${source.enabled ? 'bg-emerald-400/15 text-emerald-100' : 'bg-white/10 text-white/50'}`}>
-          {source.enabled ? 'Enabled' : 'Disabled'}
+        <span className={`rounded-full px-3 py-1 text-xs font-black ${sourceLocked ? 'bg-amber-400/15 text-amber-100' : source.enabled ? 'bg-emerald-400/15 text-emerald-100' : 'bg-white/10 text-white/50'}`}>
+          {sourceLocked ? 'Running' : source.enabled ? 'Enabled' : 'Disabled'}
         </span>
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-white/65">
@@ -896,10 +898,10 @@ function SourceControlCard({ source, busy, onToggle, onRun }) {
         <button
           type="button"
           onClick={() => onRun(source)}
-          disabled={Boolean(busy)}
+          disabled={Boolean(busy) || sourceLocked}
           className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-500 disabled:opacity-60"
         >
-          {busy === source.id ? 'Working...' : 'Run source'}
+          {busy === source.id ? 'Working...' : sourceLocked ? 'Already running' : 'Run source'}
         </button>
       </div>
     </div>
@@ -946,6 +948,11 @@ function formatSourceDescription(source) {
 function formatAdminDate(value) {
   if (!value) return 'never';
   return new Date(value).toLocaleString();
+}
+
+function isSourceLocked(source) {
+  if (!source?.ingestion_lock_token || !source?.ingestion_lock_expires_at) return false;
+  return new Date(source.ingestion_lock_expires_at).getTime() > Date.now();
 }
 
 function summarizeResult(result) {
