@@ -9,7 +9,7 @@ import {
 
 export default function JobFilters({ query, filters, perPage, onQueryChange, onPerPageChange }) {
   return (
-    <div className="mt-5 grid gap-3 lg:grid-cols-[1.4fr_repeat(5,minmax(0,1fr))]">
+    <div className="mt-5 grid gap-3 lg:grid-cols-[1.4fr_repeat(6,minmax(0,1fr))]">
       <input
         value={query.search}
         onChange={(event) => onQueryChange({ search: event.target.value })}
@@ -24,6 +24,12 @@ export default function JobFilters({ query, filters, perPage, onQueryChange, onP
         groups={CAREER_CATEGORY_GROUPS}
       />
       <Select label="Role Type" value={query.employmentType} onChange={(value) => onQueryChange({ employmentType: value })} options={mergeOptions(JOB_EMPLOYMENT_TYPES, filters.employmentTypes)} />
+      <Select
+        label="H1B"
+        value={query.h1bStatus}
+        onChange={(value) => onQueryChange({ h1bStatus: value })}
+        options={mergeOptions(['h1b_friendly', 'explicit_h1b_sponsor', 'likely_h1b_sponsor'], filters.h1bStatuses)}
+      />
       <Select label="Workplace" value={query.workplaceType} onChange={(value) => onQueryChange({ workplaceType: value })} options={filters.workplaceTypes || []} />
       <Select label="Company" value={query.company} onChange={(value) => onQueryChange({ company: value })} options={filters.companies || []} />
       <select
@@ -81,6 +87,12 @@ function Select({ label, value, onChange, options, groups }) {
 }
 
 function formatOption(value) {
+  const labels = {
+    h1b_friendly: 'H1B Friendly',
+    explicit_h1b_sponsor: 'Explicit H1B',
+    likely_h1b_sponsor: 'Likely H1B',
+  };
+  if (labels[value]) return labels[value];
   return String(value || '').replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 

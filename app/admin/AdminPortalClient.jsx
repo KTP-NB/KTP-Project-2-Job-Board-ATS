@@ -562,6 +562,7 @@ function formatTimeLimit(minutes) {
 function JobBoardAdminPanel() {
   const [overview, setOverview] = useState(null);
   const [sources, setSources] = useState([]);
+  const [h1bSources, setH1bSources] = useState([]);
   const [busy, setBusy] = useState(null);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -571,10 +572,12 @@ function JobBoardAdminPanel() {
     Promise.all([
       jobBoardApi('/api/job-board/admin/overview'),
       jobBoardApi('/api/job-board/admin/sources?provider=intern_list'),
+      jobBoardApi('/api/job-board/admin/sources?provider=jobright_h1b'),
     ])
-      .then(([overviewData, sourceData]) => {
+      .then(([overviewData, sourceData, h1bSourceData]) => {
         setOverview(overviewData);
         setSources(sourceData.sources || []);
+        setH1bSources(h1bSourceData.sources || []);
       })
       .catch((err) => setError(err.message || 'Unable to load Job Board admin data.'));
   }, []);
@@ -634,6 +637,58 @@ function JobBoardAdminPanel() {
     }
   }
 
+  async function runGithubSource(source) {
+    setBusy(source.id);
+    setError('');
+    setMessage('');
+    try {
+      const result = await jobBoardApi('/api/job-board/admin/github-ingest', {
+        method: 'POST',
+        body: JSON.stringify({ sourceId: source.id }),
+      });
+      setMessage(`${source.source_name} ingestion complete: ${summarizeResult(result.summary)}`);
+      await loadOverview();
+    } catch (err) {
+      setError(err.message || 'GitHub ingestion failed.');
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function runH1bSources() {
+    const enabledSources = h1bSources.filter((source) => source.enabled);
+    if (!enabledSources.length) {
+      setError('No enabled H1B sources are configured.');
+      return;
+    }
+
+    setBusy('Run H1B SWE');
+    setError('');
+    setMessage('');
+    try {
+      const results = [];
+      for (const source of enabledSources) {
+        const result = await jobBoardApi('/api/job-board/admin/github-ingest', {
+          method: 'POST',
+          body: JSON.stringify({ sourceId: source.id }),
+        });
+        results.push(result.summary);
+      }
+      const totals = results.reduce((acc, summary) => ({
+        accepted: acc.accepted + (summary?.accepted || 0),
+        inserted: acc.inserted + (summary?.inserted || 0),
+        updated: acc.updated + (summary?.updated || 0),
+        failed: acc.failed + (summary?.failed || 0),
+      }), { accepted: 0, inserted: 0, updated: 0, failed: 0 });
+      setMessage(`H1B SWE ingestion complete: accepted ${totals.accepted}, inserted ${totals.inserted}, updated ${totals.updated}, failed ${totals.failed}.`);
+      await loadOverview();
+    } catch (err) {
+      setError(err.message || 'H1B ingestion failed.');
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function clearJobPostings() {
     const confirmed = window.confirm(
       'Archive all current Job Board postings? This removes them from member search but keeps saved jobs, applications, analytics, and source history.'
@@ -674,6 +729,7 @@ function JobBoardAdminPanel() {
         </div>
         <div className="flex flex-wrap gap-2">
           <AdminActionButton busy={busy} label="Run US internships" onClick={() => runAction('Run US internships', '/api/job-board/admin/intern-list-ingest')} />
+          <AdminActionButton busy={busy} label="Run H1B SWE" onClick={runH1bSources} />
           <AdminActionButton busy={busy} label="Refresh recommendations" onClick={() => runAction('Refresh recommendations', '/api/job-board/admin/recommendations/refresh')} />
           <AdminActionButton busy={busy} label="Generate digest" onClick={() => runAction('Generate digest', '/api/job-board/admin/digest')} />
           <AdminActionButton busy={busy} label="Clear postings" tone="danger" onClick={clearJobPostings} />
@@ -749,6 +805,26 @@ function JobBoardAdminPanel() {
             </div>
           </div>
 
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+            <div className="flex flex-col gap-1">
+              <h3 className="text-sm font-black uppercase tracking-wide text-blue-100">H1B sources</h3>
+              <p className="text-sm text-white/50">Enable, disable, or run H1B-friendly software engineering ingestion independently.</p>
+            </div>
+            <div className="mt-4 grid gap-3 lg:grid-cols-2">
+              {h1bSources.length ? h1bSources.map((source) => (
+                <SourceControlCard
+                  key={source.id}
+                  source={source}
+                  busy={busy}
+                  onToggle={toggleSource}
+                  onRun={runGithubSource}
+                />
+              )) : (
+                <p className="text-sm text-white/50">No H1B sources configured.</p>
+              )}
+            </div>
+          </div>
+
           <div className="grid gap-4 lg:grid-cols-1">
             <div className="rounded-xl border border-white/10 bg-white/5 p-4">
               <h3 className="text-sm font-black uppercase tracking-wide text-blue-100">30-day analytics</h3>
@@ -788,6 +864,48 @@ function AdminActionButton({ busy, label, onClick, tone = 'primary' }) {
   );
 }
 
+function SourceControlCard({ source, busy, onToggle, onRun }) {
+  return (
+    <div className="rounded-lg bg-slate-950/30 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-black text-white">{source.source_name}</p>
+          <p className="mt-1 text-xs text-white/50">{formatSourceDescription(source)}</p>
+        </div>
+        <span className={`rounded-full px-3 py-1 text-xs font-black ${source.enabled ? 'bg-emerald-400/15 text-emerald-100' : 'bg-white/10 text-white/50'}`}>
+          {source.enabled ? 'Enabled' : 'Disabled'}
+        </span>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-white/65">
+        <p><span className="font-bold text-white/85">Career:</span> {formatAdminLabel(source.career_category)}</p>
+        <p><span className="font-bold text-white/85">Type:</span> {formatAdminLabel(source.employment_type)}</p>
+        <p><span className="font-bold text-white/85">Class:</span> {formatAdminLabel(source.source_classification || 'aggregate')}</p>
+        <p><span className="font-bold text-white/85">Priority:</span> {source.priority}</p>
+        <p><span className="font-bold text-white/85">Last success:</span> {formatAdminDate(source.last_success_at)}</p>
+        <p><span className="font-bold text-white/85">Failures:</span> {source.consecutive_failures || 0}</p>
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => onToggle(source)}
+          disabled={Boolean(busy)}
+          className="rounded-lg border border-white/15 px-3 py-2 text-xs font-bold text-white/80 hover:bg-white/10 disabled:opacity-60"
+        >
+          {source.enabled ? 'Disable' : 'Enable'}
+        </button>
+        <button
+          type="button"
+          onClick={() => onRun(source)}
+          disabled={Boolean(busy)}
+          className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-500 disabled:opacity-60"
+        >
+          {busy === source.id ? 'Working...' : 'Run source'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function AdminList({ title, rows, fields }) {
   return (
     <div className="rounded-xl border border-white/10 bg-white/5 p-4">
@@ -818,6 +936,9 @@ function formatSourceDescription(source) {
     const country = source.metadata?.country || 'US';
     const category = source.metadata?.internListCategory || source.repository_name;
     return `Intern List / ${country} / ${category}`;
+  }
+  if (source.provider === 'jobright_h1b') {
+    return `H1B-friendly ${formatAdminLabel(source.career_category)} / ${source.repository_owner}/${source.repository_name}`;
   }
   return `${source.provider} / ${source.repository_owner}/${source.repository_name}`;
 }

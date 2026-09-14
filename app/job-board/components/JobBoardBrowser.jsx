@@ -21,6 +21,7 @@ export default function JobBoardBrowser({ savedOnly = false }) {
     search: '',
     category: '',
     employmentType: '',
+    h1bStatus: '',
     workplaceType: '',
     company: '',
     postedToday: false,

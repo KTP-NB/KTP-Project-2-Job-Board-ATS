@@ -53,6 +53,9 @@ export async function GET(request) {
   const employmentType = params.get('employmentType');
   if (employmentType) query = query.in('employment_type', employmentTypeDbValues(employmentType));
 
+  const h1bStatus = params.get('h1bStatus');
+  if (h1bStatus) query = applyH1bFilter(query, h1bStatus);
+
   const workplaceType = params.get('workplaceType');
   if (workplaceType) query = query.eq('workplace_type', workplaceType);
 
@@ -115,7 +118,7 @@ async function getApplicationsByJobId(service, userId, jobIds) {
 async function getFilterOptions(service) {
   const { data } = await service
     .from('job_board_jobs')
-    .select('company, career_category, employment_type, workplace_type, title, source_url, source_payload')
+    .select('company, career_category, employment_type, workplace_type, title, source_url, source_payload, visa_sponsorship_status')
     .eq('status', 'open');
 
   return {
@@ -123,6 +126,7 @@ async function getFilterOptions(service) {
     categories: uniqueSorted(data?.map((job) => normalizeDisplayCareerCategory(job.career_category))),
     employmentTypes: uniqueSorted(data?.map((job) => inferDisplayEmploymentType(job))),
     workplaceTypes: uniqueSorted(data?.map((job) => job.workplace_type)),
+    h1bStatuses: uniqueSorted(data?.map((job) => job.visa_sponsorship_status).filter((value) => value && value !== 'unknown')),
   };
 }
 
@@ -147,4 +151,14 @@ function categoryDbValues(category) {
 function employmentTypeDbValues(employmentType) {
   if (employmentType === 'internship') return ['internship', 'new_grad'];
   return [employmentType];
+}
+
+function applyH1bFilter(query, h1bStatus) {
+  if (h1bStatus === 'h1b_friendly') {
+    return query.in('visa_sponsorship_status', ['explicit_h1b_sponsor', 'likely_h1b_sponsor']);
+  }
+  if (['explicit_h1b_sponsor', 'likely_h1b_sponsor', 'unknown'].includes(h1bStatus)) {
+    return query.eq('visa_sponsorship_status', h1bStatus);
+  }
+  return query;
 }

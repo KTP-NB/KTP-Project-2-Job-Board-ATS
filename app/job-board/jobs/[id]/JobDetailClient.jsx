@@ -73,8 +73,16 @@ export default function JobDetailClient({ jobId }) {
             <span className="rounded-full bg-blue-500/25 px-3 py-1">{formatOption(job.workplaceType)}</span>
             <span className="rounded-full bg-blue-500/25 px-3 py-1">{formatOption(job.employmentType)}</span>
             <span className="rounded-full bg-blue-500/25 px-3 py-1">{formatOption(job.careerCategory)}</span>
+            {h1bLabel(job.visaSponsorshipStatus) ? (
+              <span className="rounded-full bg-amber-400/20 px-3 py-1 text-amber-50">{h1bLabel(job.visaSponsorshipStatus)}</span>
+            ) : null}
             {job.salaryRange ? <span className="rounded-full bg-blue-500/25 px-3 py-1">{job.salaryRange}</span> : null}
           </div>
+          {job.visaSponsorshipNotes ? (
+            <p className="mt-4 rounded-xl border border-amber-200/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-50">
+              {job.visaSponsorshipNotes}
+            </p>
+          ) : null}
           {analysisError ? <p className="mt-5 rounded-xl bg-red-500/15 px-4 py-3 text-sm font-bold text-red-100">{analysisError}</p> : null}
         </header>
 
@@ -122,6 +130,12 @@ function JobSection({ title, items }) {
 
 function formatOption(value) {
   return String(value || '').replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function h1bLabel(value) {
+  if (value === 'explicit_h1b_sponsor') return 'Explicit H1B';
+  if (value === 'likely_h1b_sponsor') return 'Likely H1B';
+  return '';
 }
 
 function profileDescription(job) {

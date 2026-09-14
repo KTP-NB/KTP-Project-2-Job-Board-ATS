@@ -18,6 +18,9 @@ export default function JobCard({ job, onToggleSaved, onUpdateApplication }) {
             <span className="rounded-full bg-blue-500/25 px-3 py-1">{formatOption(job.workplaceType)}</span>
             <span className="rounded-full bg-blue-500/25 px-3 py-1">{formatOption(job.employmentType)}</span>
             <span className="rounded-full bg-blue-500/25 px-3 py-1">{formatOption(job.careerCategory)}</span>
+            {h1bLabel(job.visaSponsorshipStatus) ? (
+              <span className="rounded-full bg-amber-400/20 px-3 py-1 text-amber-50">{h1bLabel(job.visaSponsorshipStatus)}</span>
+            ) : null}
             {isPostedToday(job.postedAt) ? <span className="rounded-full bg-emerald-500/25 px-3 py-1">Posted today</span> : null}
           </div>
         </div>
@@ -69,6 +72,12 @@ export default function JobCard({ job, onToggleSaved, onUpdateApplication }) {
 
 function formatOption(value) {
   return String(value || '').replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function h1bLabel(value) {
+  if (value === 'explicit_h1b_sponsor') return 'Explicit H1B';
+  if (value === 'likely_h1b_sponsor') return 'Likely H1B';
+  return '';
 }
 
 function isPostedToday(value) {
