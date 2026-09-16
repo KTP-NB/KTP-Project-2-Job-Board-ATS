@@ -678,10 +678,11 @@ function JobBoardAdminPanel() {
         accepted: acc.accepted + (summary?.accepted || 0),
         inserted: acc.inserted + (summary?.inserted || 0),
         updated: acc.updated + (summary?.updated || 0),
+        staleArchived: acc.staleArchived + (summary?.staleArchived || 0),
         skippedLocked: acc.skippedLocked + (summary?.skippedLocked || 0),
         failed: acc.failed + (summary?.failed || 0),
-      }), { accepted: 0, inserted: 0, updated: 0, skippedLocked: 0, failed: 0 });
-      setMessage(`H1B SWE ingestion complete: accepted ${totals.accepted}, inserted ${totals.inserted}, updated ${totals.updated}, already running ${totals.skippedLocked}, failed ${totals.failed}.`);
+      }), { accepted: 0, inserted: 0, updated: 0, staleArchived: 0, skippedLocked: 0, failed: 0 });
+      setMessage(`H1B SWE ingestion complete: accepted ${totals.accepted}, inserted ${totals.inserted}, updated ${totals.updated}, stale archived ${totals.staleArchived}, already running ${totals.skippedLocked}, failed ${totals.failed}.`);
       await loadOverview();
     } catch (err) {
       setError(err.message || 'H1B ingestion failed.');
