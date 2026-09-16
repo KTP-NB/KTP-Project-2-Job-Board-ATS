@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireJobBoardAdmin } from '@/lib/job-board/auth';
 import { jsonError, readJson } from '@/lib/job-board/apiResponses';
 import { runInternListIngestion } from '@/lib/job-board/ingestion/internList/runInternListIngestion';
+import { getJobBoardServiceClient } from '@/lib/job-board/supabaseServer';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -13,7 +14,10 @@ export async function POST(request) {
 
   const body = await readJson(request);
   try {
-    const summary = await runInternListIngestion({ sourceId: body.sourceId || null });
+    const summary = await runInternListIngestion({
+      service: getJobBoardServiceClient(),
+      sourceId: body.sourceId || null,
+    });
     return NextResponse.json({ summary });
   } catch (error) {
     return jsonError(error.message || 'Intern List ingestion failed.', error.status || 500);
