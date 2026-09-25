@@ -15,6 +15,7 @@ const ALLOWED = [
   "executive_board",
   "committees",
   "sort_order",
+  "public_directory_visible",
 ];
 const ROLES = ["member", "manager", "admin", "super_admin"];
 const PERMISSIONS = [
@@ -76,7 +77,7 @@ export async function PUT(request, { params }) {
     .update(updates)
     .eq("id", params.id)
     .select(
-      "id,user_id,name,email,position,pledge_class,member_status,graduation_year,major,minors,linkedin_url,executive_board,committees,sort_order,photo_url,access_role,manager_permissions,company_questions_blocked,default_application_target,uses_default_application_target,created_at,updated_at",
+      "id,user_id,name,email,position,pledge_class,member_status,graduation_year,major,minors,linkedin_url,executive_board,committees,sort_order,photo_url,public_directory_visible,access_role,manager_permissions,company_questions_blocked,default_application_target,uses_default_application_target,created_at,updated_at",
     )
     .single();
   if (error)

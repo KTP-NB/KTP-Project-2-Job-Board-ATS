@@ -118,10 +118,10 @@ export default function MembersPage() {
         return;
       }
 
-      // Explicit list: anonymous visitors are granted only the directory
-      // columns, so `select('*')` would be denied for signed-out users.
+      // The database view enforces public visibility for anonymous and
+      // authenticated visitors while exposing only directory-safe columns.
       const { data, error } = await supabase
-        .from('member_profiles')
+        .from('public_member_directory')
         .select(
           'id, name, position, image_path, photo_url, graduation_year, major, minors, linkedin_url, pledge_class, member_status, executive_board, committees, sort_order'
         )

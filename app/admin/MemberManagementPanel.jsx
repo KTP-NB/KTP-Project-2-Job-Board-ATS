@@ -24,6 +24,7 @@ const empty = {
   access_role: "member",
   manager_permissions: [],
   company_questions_blocked: false,
+  public_directory_visible: true,
   current_application_target: 40,
   uses_default_application_target: true,
 };
@@ -221,6 +222,7 @@ export default function MemberManagementPanel({ viewerRole }) {
                 <th>Class</th>
                 <th>Position</th>
                 <th>Requirement</th>
+                <th>Directory</th>
                 <th>Access</th>
                 <th></th>
               </tr>
@@ -244,6 +246,11 @@ export default function MemberManagementPanel({ viewerRole }) {
                         {m.uses_default_application_target ? "Chapter default" : "Custom"}
                       </small>
                     )}
+                  </td>
+                  <td>
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${m.public_directory_visible ? "bg-emerald-400/10 text-emerald-200" : "bg-amber-400/10 text-amber-200"}`}>
+                      {m.public_directory_visible ? "Visible" : "Hidden"}
+                    </span>
                   </td>
                   <td>{formatRole(m.access_role)}</td>
                   <td className="p-3 text-right">
@@ -324,6 +331,20 @@ function MemberModal({
               />
             </label>
           ))}
+          <label className="sm:col-span-2 flex items-start gap-3 rounded-xl border border-white/10 p-4 text-sm font-bold">
+            <input
+              type="checkbox"
+              className="mt-1"
+              checked={form.public_directory_visible}
+              onChange={(e) => set("public_directory_visible", e.target.checked)}
+            />
+            <span>
+              Show in public member directory
+              <span className="block text-sm font-medium text-white/50">
+                Hidden members keep normal access to applications, CodeRank, resumes, and other member tools.
+              </span>
+            </span>
+          </label>
           {!inviteMode && (
             <>
             <label className="grid gap-1 text-sm font-bold">
@@ -454,6 +475,7 @@ function InviteModal({ onClose }) {
       expires_at: "",
       max_uses: 50,
       allowed_emails: "",
+      public_directory_visible: true,
     }),
     [url, setUrl] = useState(""),
     [error, setError] = useState(""),
@@ -544,6 +566,20 @@ function InviteModal({ onClose }) {
                 placeholder="One per line or comma-separated"
                 className="rounded-xl border border-white/15 bg-white/5 p-3"
               />
+            </label>
+            <label className="flex items-start gap-3 rounded-xl border border-white/10 p-4 text-sm font-bold sm:col-span-2">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={form.public_directory_visible}
+                onChange={(e) => setForm((f) => ({ ...f, public_directory_visible: e.target.checked }))}
+              />
+              <span>
+                Show registrants in public member directory
+                <span className="block text-sm font-medium text-white/50">
+                  Turn this off for a new class that should have member access before initiation.
+                </span>
+              </span>
             </label>
             {error && <p className="text-red-300 sm:col-span-2">{error}</p>}
             <button

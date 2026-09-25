@@ -50,6 +50,9 @@ jobs:
       - name: Test application requirements
         run: npm run test:applications
 
+      - name: Test member directory visibility
+        run: npm run test:members
+
       - name: Build
         run: npm run build
 
