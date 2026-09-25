@@ -8,6 +8,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(undefined); // undefined = loading
   const [profileName, setProfileName] = useState(null);
   const [accessRole, setAccessRole] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   useEffect(() => {
     if (!hasSupabaseConfig) {
@@ -50,10 +51,12 @@ export function AuthProvider({ children }) {
     if (!hasSupabaseConfig || !user?.id) {
       setProfileName(null);
       setAccessRole(null);
+      setProfileLoading(false);
       return undefined;
     }
 
     let isMounted = true;
+    setProfileLoading(true);
 
     async function loadProfileName() {
       const { data, error } = await supabase
@@ -65,6 +68,7 @@ export function AuthProvider({ children }) {
       if (!isMounted) return;
       setProfileName(error ? null : data?.name || null);
       setAccessRole(error ? null : data?.access_role || 'member');
+      setProfileLoading(false);
     }
 
     loadProfileName();
@@ -85,6 +89,7 @@ export function AuthProvider({ children }) {
       '',
     setProfileName,
     accessRole,
+    profileLoading: profileLoading || Boolean(user?.id && accessRole === null),
     hasAdminAccess: ['manager', 'admin', 'super_admin'].includes(accessRole),
     signOut: () => (hasSupabaseConfig ? supabase.auth.signOut() : Promise.resolve()),
     signIn: async (email, password) => {
@@ -157,7 +162,7 @@ export function AuthProvider({ children }) {
       if (error) throw error;
       return data;
     },
-  }), [user, profileName, accessRole]);
+  }), [user, profileName, accessRole, profileLoading]);
 
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }

@@ -85,7 +85,7 @@ export async function POST(request, { params }) {
       pledge_class: invite.pledge_class,
       member_status: "Active",
       public_directory_visible: invite.public_directory_visible !== false,
-      access_role: "member",
+      access_role: invite.access_role || "member",
       default_application_target: invite.default_application_target,
       uses_default_application_target: usesDefault,
       source_key: `invite:${invited.user.id}`,

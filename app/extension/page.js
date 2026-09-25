@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { Download } from 'lucide-react';
 import AuthGate from '@/components/authgate';
+import MemberPermissionGate from '@/components/MemberPermissionGate';
+import { MEMBER_PERMISSIONS } from '@/lib/memberAccess';
 import FadeIn from '@/components/FadeIn';
 
 const INSTALL_STEPS = [
@@ -193,7 +195,9 @@ function ExtensionDownloadContent() {
 export default function ExtensionPage() {
   return (
     <AuthGate>
-      <ExtensionDownloadContent />
+      <MemberPermissionGate permission={MEMBER_PERMISSIONS.REFERRAL_FINDER}>
+        <ExtensionDownloadContent />
+      </MemberPermissionGate>
     </AuthGate>
   );
 }

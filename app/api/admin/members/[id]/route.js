@@ -17,7 +17,7 @@ const ALLOWED = [
   "sort_order",
   "public_directory_visible",
 ];
-const ROLES = ["member", "manager", "admin", "super_admin"];
+const ROLES = ["pledge", "member", "manager", "admin", "super_admin"];
 const PERMISSIONS = [
   "members.manage",
   "resumes.manage",

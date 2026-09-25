@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/coderank/auth";
+import { requireMemberPermission } from "@/lib/coderank/auth";
 import { getServiceClient } from "@/lib/coderank/supabaseServer";
 import { createApiKey } from "@/lib/applications/apiAuth";
+import { MEMBER_PERMISSIONS } from "@/lib/memberAccess";
 
 const SELECT_FIELDS = "id,name,key_prefix,scopes,last_used_at,expires_at,revoked_at,created_at";
 const ALLOWED_SCOPES = new Set(["applications:read", "applications:write"]);
 
 async function activeMember(request) {
-  const auth = await requireUser(request);
+  const auth = await requireMemberPermission(request, MEMBER_PERMISSIONS.INTEGRATIONS);
   if (auth.error) return auth;
   const service = getServiceClient();
   const { data: profile } = await service

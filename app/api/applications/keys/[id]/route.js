@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { requireUser } from "@/lib/coderank/auth";
+import { requireMemberPermission } from "@/lib/coderank/auth";
 import { getServiceClient } from "@/lib/coderank/supabaseServer";
+import { MEMBER_PERMISSIONS } from "@/lib/memberAccess";
 
 export async function DELETE(request, { params }) {
-  const auth = await requireUser(request);
+  const auth = await requireMemberPermission(request, MEMBER_PERMISSIONS.INTEGRATIONS);
   if (auth.error) return auth.error;
   const { data, error } = await getServiceClient()
     .from("member_api_keys")

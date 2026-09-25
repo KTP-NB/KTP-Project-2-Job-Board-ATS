@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Building2, ChevronRight, Loader2, Search } from 'lucide-react';
 import AuthGate from '@/components/authgate';
+import MemberPermissionGate from '@/components/MemberPermissionGate';
+import { MEMBER_PERMISSIONS } from '@/lib/memberAccess';
 import CompanyQuestionsAccessGate from './AccessGate';
 import FadeIn from '@/components/FadeIn';
 import { supabase } from '@/lib/supabase';
@@ -70,6 +72,7 @@ export default function CompanyQuestionsPage() {
 
   return (
     <AuthGate>
+      <MemberPermissionGate permission={MEMBER_PERMISSIONS.COMPANY_QUESTIONS}>
       <CompanyQuestionsAccessGate>
       <main className="min-h-screen px-6 pb-20 pt-24 text-white lg:px-8">
         <FadeIn className="mx-auto w-full max-w-7xl">
@@ -159,6 +162,7 @@ export default function CompanyQuestionsPage() {
         </FadeIn>
       </main>
       </CompanyQuestionsAccessGate>
+      </MemberPermissionGate>
     </AuthGate>
   );
 }

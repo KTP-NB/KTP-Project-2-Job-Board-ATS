@@ -9,7 +9,7 @@ export async function GET(request) {
   const { data, error } = await getServiceClient()
     .from("member_invites")
     .select(
-      "id,label,pledge_class,default_application_target,public_directory_visible,allowed_emails,expires_at,max_uses,use_count,active,created_at",
+      "id,label,pledge_class,access_role,default_application_target,public_directory_visible,allowed_emails,expires_at,max_uses,use_count,active,created_at",
     )
     .order("created_at", { ascending: false });
   if (error)
@@ -27,12 +27,14 @@ export async function POST(request) {
     .split(/[\s,]+/)
     .map((v) => v.trim().toLowerCase())
     .filter(Boolean);
+  const access_role = body.access_role === "pledge" ? "pledge" : "member";
   const row = {
     token_hash,
     label: String(body.label || "").trim(),
     pledge_class: String(body.pledge_class || "").trim() || null,
     default_application_target: Number(body.default_application_target ?? 40),
-    public_directory_visible: body.public_directory_visible !== false,
+    access_role,
+    public_directory_visible: access_role === "pledge" ? false : body.public_directory_visible !== false,
     allowed_emails,
     expires_at: body.expires_at,
     max_uses: Number(body.max_uses || 100),
@@ -47,7 +49,7 @@ export async function POST(request) {
     .from("member_invites")
     .insert(row)
     .select(
-      "id,label,pledge_class,default_application_target,public_directory_visible,allowed_emails,expires_at,max_uses,use_count,active,created_at",
+      "id,label,pledge_class,access_role,default_application_target,public_directory_visible,allowed_emails,expires_at,max_uses,use_count,active,created_at",
     )
     .single();
   if (error)

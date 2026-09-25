@@ -1,6 +1,8 @@
 'use client';
 
 import AuthGate from "@/components/authgate";
+import MemberPermissionGate from "@/components/MemberPermissionGate";
+import { MEMBER_PERMISSIONS } from "@/lib/memberAccess";
 import { useConfirmToast } from "@/components/ConfirmToast";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase, supabaseBucket } from "@/lib/supabase";
@@ -207,6 +209,7 @@ export default function StudyToolsPage() {
 
   return (
     <AuthGate>
+      <MemberPermissionGate permission={MEMBER_PERMISSIONS.STUDY_TOOLS}>
       {confirmationToast}
       <div className="max-w-4xl mx-auto px-6 pt-28 pb-10">
         <h1 className="text-3xl font-bold mb-2">Study Materials</h1>
@@ -444,6 +447,7 @@ export default function StudyToolsPage() {
           </div>
         </div>
       </div>
+      </MemberPermissionGate>
     </AuthGate>
   );
 }

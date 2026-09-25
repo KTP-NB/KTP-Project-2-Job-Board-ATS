@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import AuthGate from '@/components/authgate';
+import MemberPermissionGate from '@/components/MemberPermissionGate';
+import { MEMBER_PERMISSIONS } from '@/lib/memberAccess';
 import AccountShell from '@/components/AccountShell';
 import ApiKeysPanel from '@/components/ApiKeysPanel';
 import { useAuth } from '@/components/authprovider';
@@ -67,7 +69,9 @@ function MemberIntegrations() {
 export default function MemberIntegrationsPage() {
   return (
     <AuthGate>
-      <MemberIntegrations />
+      <MemberPermissionGate permission={MEMBER_PERMISSIONS.INTEGRATIONS}>
+        <MemberIntegrations />
+      </MemberPermissionGate>
     </AuthGate>
   );
 }

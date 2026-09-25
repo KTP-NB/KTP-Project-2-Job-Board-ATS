@@ -30,7 +30,7 @@ const empty = {
 };
 
 function formatRole(value) {
-  return { member: "Member", manager: "Manager", admin: "Admin", super_admin: "Super Admin" }[value] || "Member";
+  return { pledge: "Pledge", member: "Member", manager: "Manager", admin: "Admin", super_admin: "Super Admin" }[value] || "Member";
 }
 
 function formatPosition(value) {
@@ -197,7 +197,7 @@ export default function MemberManagementPanel({ viewerRole }) {
           label="Filter by access role"
           value={accessRole}
           onChange={setAccessRole}
-          options={[{ value: "All", label: "All access roles" }, ...["member","manager","admin","super_admin"].map((value) => ({ value, label: formatRole(value) }))]}
+          options={[{ value: "All", label: "All access roles" }, ...["pledge","member","manager","admin","super_admin"].map((value) => ({ value, label: formatRole(value) }))]}
           align="right"
           className="sm:w-48"
         />
@@ -400,7 +400,7 @@ function MemberModal({
                   label="Access role"
                   value={form.access_role}
                   onChange={(value) => set("access_role", value)}
-                  options={["member", "manager", "admin", "super_admin"].map((x) => ({ value: x, label: formatRole(x) }))}
+                  options={["pledge", "member", "manager", "admin", "super_admin"].map((x) => ({ value: x, label: formatRole(x) }))}
                 />
               </label>
               <label className="sm:col-span-2 flex items-start gap-3 rounded-xl border border-white/10 p-4 text-sm font-bold">
@@ -476,6 +476,7 @@ function InviteModal({ onClose }) {
       max_uses: 50,
       allowed_emails: "",
       public_directory_visible: true,
+      access_role: "pledge",
     }),
     [url, setUrl] = useState(""),
     [error, setError] = useState(""),
@@ -556,6 +557,23 @@ function InviteModal({ onClose }) {
               </label>
             ))}
             <label className="grid gap-1 text-sm font-bold sm:col-span-2">
+              Registrant access role
+              <SelectMenu
+                label="Registrant access role"
+                value={form.access_role}
+                onChange={(value) => setForm((current) => ({
+                  ...current,
+                  access_role: value,
+                  public_directory_visible: value === "pledge" ? false : current.public_directory_visible,
+                }))}
+                options={[
+                  { value: "pledge", label: "Pledge" },
+                  { value: "member", label: "Member" },
+                ]}
+              />
+              <span className="font-medium text-white/50">Pledges can use Member Account and assigned CodeRank assessments, and are hidden publicly by default.</span>
+            </label>
+            <label className="grid gap-1 text-sm font-bold sm:col-span-2">
               Approved emails (recommended)
               <textarea
                 rows="4"
@@ -572,6 +590,7 @@ function InviteModal({ onClose }) {
                 type="checkbox"
                 className="mt-1"
                 checked={form.public_directory_visible}
+                disabled={form.access_role === "pledge"}
                 onChange={(e) => setForm((f) => ({ ...f, public_directory_visible: e.target.checked }))}
               />
               <span>
