@@ -8,8 +8,8 @@ const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-store
 Deno.serve(async (request) => {
   if (request.method !== 'POST') return json({ error: 'Method not allowed.' }, 405);
 
-  const secret = Deno.env.get('JOB_INTERN_LIST_CRON_SECRET') || '';
-  if (!secret) return json({ error: 'Intern List Cron secret is not configured.' }, 503);
+  const secret = Deno.env.get('JOB_INGEST_CRON_SECRET') || '';
+  if (!secret) return json({ error: 'Ingestion Cron secret is not configured.' }, 503);
   if (!internalSecretMatches(request.headers.get('x-job-ingest-secret'), secret)) {
     return json({ error: 'Unauthorized' }, 401);
   }

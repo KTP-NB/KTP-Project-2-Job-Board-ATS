@@ -78,3 +78,23 @@ $$;
 revoke all on function public.job_board_invoke_intern_list_ingest() from public, anon, authenticated;
 revoke all on function public.job_board_configure_intern_list_cron(text, text) from public, anon, authenticated;
 grant execute on function public.job_board_configure_intern_list_cron(text, text) to service_role;
+
+do $$
+declare
+  v_secret text;
+  v_h1b_url text;
+begin
+  select decrypted_secret into v_secret
+  from vault.decrypted_secrets where name = 'job_board_h1b_cron_secret';
+  select decrypted_secret into v_h1b_url
+  from vault.decrypted_secrets where name = 'job_board_h1b_edge_url';
+  if v_secret is null or v_h1b_url is null then
+    raise exception 'Configure the existing H1B ingestion Cron before scheduling Intern List';
+  end if;
+
+  perform public.job_board_configure_intern_list_cron(
+    v_secret,
+    replace(v_h1b_url, '/job-github-ingest', '/job-intern-list-ingest')
+  );
+end;
+$$;
