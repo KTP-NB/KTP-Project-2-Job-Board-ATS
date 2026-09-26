@@ -1,14 +1,16 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { ExternalLink, Play, RefreshCw, Trash2 } from 'lucide-react';
+import { ExternalLink, Play, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { jobBoardApi } from '@/lib/job-board/clientFetch';
+import { CAREER_CATEGORIES, JOB_EMPLOYMENT_TYPES } from '@/lib/job-board/constants';
 
 const SOURCE_GROUPS = [
   { title: 'US internships', providers: ['intern_list'] },
   { title: 'H1B software engineering', providers: ['jobright_h1b'] },
   { title: 'Backup GitHub sources', providers: ['jobright', 'simplify'] },
 ];
+const EMPTY_SOURCE = { provider: 'jobright', sourceName: '', repositoryOwner: '', repositoryName: '', branch: 'main', careerCategory: 'software_engineering', employmentType: 'internship', sourceClassification: 'specialized' };
 
 export default function JobBoardAdminPanel() {
   const [sources, setSources] = useState([]);
@@ -17,6 +19,8 @@ export default function JobBoardAdminPanel() {
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [newSource, setNewSource] = useState(EMPTY_SOURCE);
+  const [showAddSource, setShowAddSource] = useState(false);
 
   const refresh = useCallback(async () => {
     const [sourceResult, overviewResult] = await Promise.all([
@@ -40,8 +44,10 @@ export default function JobBoardAdminPanel() {
       const summary = result?.summary || result;
       setMessage(`${label}: ${formatSummary(summary)}`);
       await refresh();
+      return true;
     } catch (err) {
       setError(err.message || `${label} failed.`);
+      return false;
     } finally {
       setBusy('');
     }
@@ -64,6 +70,18 @@ export default function JobBoardAdminPanel() {
     }));
   }
 
+  async function addSource(event) {
+    event.preventDefault();
+    const added = await run('Add source', () => jobBoardApi('/api/job-board/admin/sources', {
+      method: 'POST',
+      body: JSON.stringify(newSource),
+    }));
+    if (!added) return;
+    setNewSource(EMPTY_SOURCE);
+    setShowAddSource(false);
+    setShowDisabled(true);
+  }
+
   function archivePostings() {
     if (!window.confirm('Archive all open Job Board postings? Saved jobs and application history will remain.')) return;
     run('Archive postings', () => jobBoardApi('/api/job-board/admin/jobs/clear', {
@@ -80,7 +98,7 @@ export default function JobBoardAdminPanel() {
           <p className="text-sm text-white/55">Source status and ingestion history</p>
         </div>
         <div className="flex gap-2">
-          <button type="button" onClick={() => run('Refresh', refresh)} disabled={Boolean(busy)} className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-3 py-2 text-sm font-semibold hover:bg-white/10 disabled:opacity-50"><RefreshCw size={16} /> Refresh</button>
+          <button type="button" onClick={() => run('Refresh', () => Promise.resolve())} disabled={Boolean(busy)} className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-3 py-2 text-sm font-semibold hover:bg-white/10 disabled:opacity-50"><RefreshCw size={16} /> Refresh</button>
           <button type="button" onClick={archivePostings} disabled={Boolean(busy)} className="inline-flex items-center gap-2 rounded-lg border border-red-400/30 px-3 py-2 text-sm font-semibold text-red-200 hover:bg-red-500/10 disabled:opacity-50"><Trash2 size={16} /> Archive postings</button>
         </div>
       </div>
@@ -127,6 +145,23 @@ export default function JobBoardAdminPanel() {
         );
       })}
 
+      <section className="border-t border-white/10 pt-5">
+        <button type="button" onClick={() => setShowAddSource((value) => !value)} className="inline-flex items-center gap-2 text-sm font-semibold text-blue-200 hover:text-white"><Plus size={16} /> Add GitHub source</button>
+        {showAddSource && (
+          <form onSubmit={addSource} className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <SourceSelect label="Provider" value={newSource.provider} values={['jobright', 'simplify']} onChange={(value) => setNewSource({ ...newSource, provider: value })} />
+            <SourceInput label="Source name" value={newSource.sourceName} onChange={(value) => setNewSource({ ...newSource, sourceName: value })} />
+            <SourceInput label="GitHub owner" value={newSource.repositoryOwner} onChange={(value) => setNewSource({ ...newSource, repositoryOwner: value })} />
+            <SourceInput label="Repository" value={newSource.repositoryName} onChange={(value) => setNewSource({ ...newSource, repositoryName: value })} />
+            <SourceInput label="Branch" value={newSource.branch} onChange={(value) => setNewSource({ ...newSource, branch: value })} />
+            <SourceSelect label="Category" value={newSource.careerCategory} values={CAREER_CATEGORIES} onChange={(value) => setNewSource({ ...newSource, careerCategory: value })} />
+            <SourceSelect label="Role type" value={newSource.employmentType} values={JOB_EMPLOYMENT_TYPES} onChange={(value) => setNewSource({ ...newSource, employmentType: value })} />
+            <SourceSelect label="Coverage" value={newSource.sourceClassification} values={['specialized', 'aggregate']} onChange={(value) => setNewSource({ ...newSource, sourceClassification: value })} />
+            <div className="sm:col-span-2 lg:col-span-4"><button type="submit" disabled={Boolean(busy)} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold hover:bg-blue-500 disabled:opacity-50">Add disabled source</button></div>
+          </form>
+        )}
+      </section>
+
       <section>
         <h3 className="mb-3 text-base font-bold">Recent ingestion runs</h3>
         <div className="divide-y divide-white/10 border-y border-white/10 text-sm">
@@ -140,6 +175,14 @@ export default function JobBoardAdminPanel() {
       </section>
     </section>
   );
+}
+
+function SourceInput({ label, value, onChange }) {
+  return <label className="space-y-1 text-xs text-white/65"><span>{label}</span><input required value={value} onChange={(event) => onChange(event.target.value)} className="w-full rounded border border-white/20 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-blue-400" /></label>;
+}
+
+function SourceSelect({ label, value, values, onChange }) {
+  return <label className="space-y-1 text-xs text-white/65"><span>{label}</span><select value={value} onChange={(event) => onChange(event.target.value)} className="w-full rounded border border-white/20 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-blue-400">{values.map((option) => <option key={option} value={option}>{option.replaceAll('_', ' ')}</option>)}</select></label>;
 }
 
 function Metric({ label, value }) {
