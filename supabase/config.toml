@@ -2,3 +2,6 @@ project_id = "ktp-project-2-job-board-ats"
 
 [functions.job-github-ingest]
 verify_jwt = false
+
+[functions.job-intern-list-ingest]
+verify_jwt = false

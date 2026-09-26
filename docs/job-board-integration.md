@@ -16,6 +16,7 @@ This branch is based on KTP-NB/ktp-website `master` at `91f11c3` and carries the
 - Intern List US internship sources and the H1B software-engineering source are active. Jobright/Simplify GitHub sources are manual backup sources; a single source can be run or disabled independently.
 - Admins may add Jobright/Simplify GitHub README sources in the tab. New sources start disabled so their parser output can be reviewed before ingestion.
 - Scheduled GitHub ingestion uses the Supabase `job-github-ingest` Edge Function and Cron; no OCI/Docker worker is needed for this path. Deployed GitHub ingestion requires `GITHUB_INGEST_TOKEN` and the internal Cron secret. Local unauthenticated fetching logs a warning.
+- Daily Intern List ingestion is implemented by `job-intern-list-ingest` plus `job-board-intern-list-daily` Cron. Cron submits one request per enabled source, so each category has its own lease and run log. Configure the Edge secret `JOB_INTERN_LIST_CRON_SECRET` and use the same value with `job_board_configure_intern_list_cron(secret, function_url)` after migrations are reconciled. The new function and Cron have not been deployed to the remote project.
 - Jobright links without an extractable employer URL are labeled as Jobright links. They are not represented as direct employer applications.
 
 ## Deployment boundary
