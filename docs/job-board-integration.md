@@ -1,6 +1,6 @@
 # Job Board Integration
 
-This branch is based on KTP-NB/ktp-website `master` at `91f11c3` and carries the Job Board feature from the separate Project 2 line. The main website repository has not been modified. The Project 2 repository retains its original `main` branch and this integration is on `integration/job-board-website`.
+Project 2 `main` now contains the integrated website and Job Board. Its website base came from KTP-NB/ktp-website `master` at `91f11c3`; the main website repository has not been modified.
 
 ## Member workflow
 
@@ -16,16 +16,16 @@ This branch is based on KTP-NB/ktp-website `master` at `91f11c3` and carries the
 - Intern List US internship sources and the H1B software-engineering source are active. Jobright/Simplify GitHub sources are manual backup sources; a single source can be run or disabled independently.
 - Admins may add Jobright/Simplify GitHub README sources in the tab. New sources start disabled so their parser output can be reviewed before ingestion.
 - Scheduled GitHub ingestion uses the Supabase `job-github-ingest` Edge Function and Cron; no OCI/Docker worker is needed for this path. Deployed GitHub ingestion requires `GITHUB_INGEST_TOKEN` and the internal Cron secret. Local unauthenticated fetching logs a warning.
-- Daily Intern List ingestion is implemented by `job-intern-list-ingest` plus `job-board-intern-list-daily` Cron. Cron submits one request per enabled source, so each category has its own lease and run log. It reuses the existing `JOB_INGEST_CRON_SECRET`; the migration copies the existing H1B Vault secret and derives the new Edge URL. The Edge Function and Cron migration are deployed; the first scheduled cycle is still awaiting verification.
+- Daily Intern List ingestion is implemented by `job-intern-list-ingest` plus `job-board-intern-list-daily` Cron at 07:15 UTC. Cron submits one request per enabled source, so each category has its own lease and run log. It reuses the existing `JOB_INGEST_CRON_SECRET`; the migration copies the existing H1B Vault secret and derives the new Edge URL. The Edge Function and Cron migration are deployed; verify the first scheduled cycle by checking for one completed `job_board_ingestion_runs` row per enabled Intern List source after the next scheduled time.
 - Jobright links without an extractable employer URL are labeled as Jobright links. They are not represented as direct employer applications.
 
 ## Deployment boundary
 
 Do **not** run `supabase db push` from this branch as-is. On 2026-09-26, `supabase migration list` showed both remote-only website migration versions (starting `20260820201953`) and local-only website versions (for example `20260820202818`), plus other divergences. The live database already contains tables from both lines. First compare the SQL and resulting schema of each divergent version against the canonical website migration history, then create a reconciled migration directory or an explicitly reviewed repair plan. Avoid marking migrations applied solely to silence the CLI.
 
-The 2026-09-26 ingestion check ran all ten enabled Intern List sources successfully. A Supabase lookup for a large source previously generated a URL above 15 KB and failed with `UND_ERR_HEADERS_OVERFLOW`; lookup batches are now capped at 50 values. A sudden source snapshot below 60% of the recent completed-run baseline is marked partial, and older listings remain open rather than being retired from an incomplete fetch. The `job-intern-list-ingest` Edge Function and daily Cron migration were deployed, but the first scheduled cycle remains to be verified. The partial-snapshot safeguard was added afterward and still needs an Edge Function redeploy; this session lacked `SUPABASE_ACCESS_TOKEN` for that deployment.
+The 2026-09-26 ingestion check ran all ten enabled Intern List sources successfully. A Supabase lookup for a large source previously generated a URL above 15 KB and failed with `UND_ERR_HEADERS_OVERFLOW`; lookup batches are now capped at 50 values. A sudden source snapshot below 60% of the recent completed-run baseline is marked partial, and older listings remain open rather than being retired from an incomplete fetch. The `job-intern-list-ingest` Edge Function was redeployed with this safeguard on 2026-09-26 (active version 3). The daily Cron migration is applied, but the first scheduled cycle remains to be verified.
 
-Both ingestion Edge Functions were redeployed on 2026-09-26. See `docs/job-board-migration-comparison.md` for the read-only schema comparison and cleanup sequence before merging into Project 2 `main`.
+Both ingestion Edge Functions were redeployed on 2026-09-26. See `docs/job-board-migration-comparison.md` for the read-only schema comparison and cleanup sequence before any future migration push or website sync.
 
 ## Verification
 
