@@ -33,9 +33,10 @@ export default function Header() {
     () => [
       ...(roleHasMemberPermission(accessRole, MEMBER_PERMISSIONS.STUDY_TOOLS) ? [{ name: 'Study Tools', href: '/study-tools' }] : []),
       ...(roleHasMemberPermission(accessRole, MEMBER_PERMISSIONS.CODERANK) ? [{ name: 'CodeRank', href: '/coderank' }] : []),
+      ...(roleHasMemberPermission(accessRole, MEMBER_PERMISSIONS.APPLICATIONS) ? [{ name: 'Job Board', href: '/job-board' }] : []),
       ...(roleHasMemberPermission(accessRole, MEMBER_PERMISSIONS.COMPANY_QUESTIONS) ? [{ name: 'LC Company Tagged', href: '/company-questions' }] : []),
       ...(roleHasMemberPermission(accessRole, MEMBER_PERMISSIONS.REFERRAL_FINDER) ? [{ name: 'Referral Finder', href: '/extension' }] : []),
-      ...(hasAdminAccess ? [{ name: 'Admin Portal', href: '/admin' }] : []),
+      ...((hasAdminAccess || (process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_JOB_BOARD_DEV_ADMIN_ENABLED === 'true')) ? [{ name: 'Admin Portal', href: '/admin' }] : []),
       { name: 'Member Account', href: '/profile' },
     ],
     [hasAdminAccess, accessRole]

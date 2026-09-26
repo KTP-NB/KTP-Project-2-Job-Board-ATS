@@ -30,26 +30,17 @@ export async function GET(request, { params }) {
     entityId: job.id,
   });
 
-  const [{ data: saved }, { data: application }] = await Promise.all([
-    service
-      .from('job_board_saved_jobs')
-      .select('id')
-      .eq('user_id', auth.user.id)
-      .eq('job_id', job.id)
-      .maybeSingle(),
-    service
-      .from('job_board_applications')
-      .select('id, job_id, status, notes, applied_at, next_follow_up_at, updated_at')
-      .eq('user_id', auth.user.id)
-      .eq('job_id', job.id)
-      .maybeSingle(),
-  ]);
+  const { data: saved } = await service
+    .from('job_board_saved_jobs')
+    .select('id')
+    .eq('user_id', auth.user.id)
+    .eq('job_id', job.id)
+    .maybeSingle();
 
   return NextResponse.json({
     job: toJobSummary({
       ...job,
       saved: Boolean(saved),
-      application: application || null,
     }),
   });
 }

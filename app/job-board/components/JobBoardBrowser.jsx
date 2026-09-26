@@ -87,24 +87,6 @@ export default function JobBoardBrowser({ savedOnly = false }) {
     }
   };
 
-  const updateApplication = async (job, status) => {
-    try {
-      const data = await jobBoardApi('/api/job-board/applications', {
-        method: 'POST',
-        body: JSON.stringify({
-          jobId: job.id,
-          status,
-          appliedAt: status === 'applied' ? new Date().toISOString() : job.application?.applied_at,
-        }),
-      });
-      setJobs((current) => current.map((item) => (
-        item.id === job.id ? { ...item, application: data.application } : item
-      )));
-    } catch (err) {
-      setError(err.message || 'Unable to update application.');
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-5 shadow-xl backdrop-blur">
@@ -147,7 +129,6 @@ export default function JobBoardBrowser({ savedOnly = false }) {
                 key={job.id}
                 job={job}
                 onToggleSaved={toggleSaved}
-                onUpdateApplication={updateApplication}
               />
             ))}
           </div>

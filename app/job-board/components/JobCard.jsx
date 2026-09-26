@@ -1,10 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { APPLICATION_STATUSES } from '@/lib/job-board/constants';
 import { applicationLinkLabel } from '@/lib/job-board/applicationLink';
 
-export default function JobCard({ job, onToggleSaved, onUpdateApplication }) {
+export default function JobCard({ job, onToggleSaved }) {
   return (
     <article className="rounded-2xl border border-white/10 bg-white/[0.06] p-5 text-white shadow-lg backdrop-blur">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
@@ -54,17 +53,12 @@ export default function JobCard({ job, onToggleSaved, onUpdateApplication }) {
           >
             {job.saved ? 'Saved' : 'Save job'}
           </button>
-          <select
-            value={job.application?.status || ''}
-            onChange={(event) => event.target.value && onUpdateApplication(job, event.target.value)}
-            className="rounded-full border border-white/15 bg-slate-950/40 px-4 py-2 text-sm font-bold text-white outline-none"
-            aria-label="Application status"
+          <Link
+            href={`/applications?jobBoardJob=${encodeURIComponent(job.id)}`}
+            className="rounded-full border border-white/15 px-4 py-2 text-center text-sm font-bold text-white hover:bg-white/10"
           >
-            <option value="">Track application</option>
-            {APPLICATION_STATUSES.map((status) => (
-              <option key={status} value={status}>{formatOption(status)}</option>
-            ))}
-          </select>
+            Track application
+          </Link>
         </div>
       </div>
     </article>

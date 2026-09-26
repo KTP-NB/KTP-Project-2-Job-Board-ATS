@@ -17,7 +17,7 @@ export async function GET(request) {
     const [jobs, saved, apps, analyses, notifications, scraperRuns, ingestionRuns, logs, analytics] = await Promise.all([
       service.from('job_board_jobs').select('id', { count: 'exact', head: true }).eq('status', 'open'),
       service.from('job_board_saved_jobs').select('id', { count: 'exact', head: true }),
-      service.from('job_board_applications').select('id', { count: 'exact', head: true }),
+      service.from('internship_applications').select('id', { count: 'exact', head: true }),
       service.from('job_board_ats_analyses').select('id', { count: 'exact', head: true }),
       service.from('job_board_notifications').select('id', { count: 'exact', head: true }),
       service.from('job_board_scraper_runs').select('*').order('created_at', { ascending: false }).limit(5),

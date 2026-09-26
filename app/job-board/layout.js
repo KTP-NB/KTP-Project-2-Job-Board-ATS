@@ -1,4 +1,6 @@
 import AuthGate from '@/components/authgate';
+import MemberPermissionGate from '@/components/MemberPermissionGate';
+import { MEMBER_PERMISSIONS } from '@/lib/memberAccess';
 import JobBoardShell from './components/JobBoardShell';
 
 export const metadata = {
@@ -9,7 +11,9 @@ export const metadata = {
 export default function JobBoardLayout({ children }) {
   return (
     <AuthGate>
-      <JobBoardShell>{children}</JobBoardShell>
+      <MemberPermissionGate permission={MEMBER_PERMISSIONS.APPLICATIONS}>
+        <JobBoardShell>{children}</JobBoardShell>
+      </MemberPermissionGate>
     </AuthGate>
   );
 }

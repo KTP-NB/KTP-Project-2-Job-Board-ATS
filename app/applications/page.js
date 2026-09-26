@@ -9,6 +9,8 @@ import { supabase } from '@/lib/supabase';
 import SelectMenu from '@/components/SelectMenu';
 import DatePicker from '@/components/DatePicker';
 import { applicationCreatePayload, applicationUpdatePayload } from '@/lib/applications/payloads.mjs';
+import { jobBoardApi } from '@/lib/job-board/clientFetch';
+import { isJobBoardJobId, jobBoardApplicationDraft } from '@/lib/job-board/trackerBridge';
 
 const DEFAULT_TARGET = 40;
 const STATUSES = [
@@ -75,6 +77,27 @@ function ApplicationsTracker() {
   }, [user?.id]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    if (!user?.id) return undefined;
+    const url = new URL(window.location.href);
+    const jobId = url.searchParams.get('jobBoardJob');
+    if (!isJobBoardJobId(jobId)) return undefined;
+
+    let active = true;
+    jobBoardApi(`/api/job-board/jobs/${jobId}`)
+      .then(({ job }) => {
+        if (!active) return;
+        setBulkRows([jobBoardApplicationDraft(job, localDate())]);
+        setBulkOpen(true);
+        url.searchParams.delete('jobBoardJob');
+        window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+      })
+      .catch((err) => {
+        if (active) setError(err.message || 'Unable to load the selected job.');
+      });
+    return () => { active = false; };
+  }, [user?.id]);
 
   const currentRequirement = useMemo(() => {
     const row = requirements.find((item) => item.month_start?.slice(0, 7) === selectedMonth);

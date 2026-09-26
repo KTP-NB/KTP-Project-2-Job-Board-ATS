@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { createClient } from 'npm:@supabase/supabase-js@2.104.0';
-import { positionIsJobBoardAdmin } from '../../../lib/job-board/adminAccess.js';
+import { profileCanManageJobBoard } from '../../../lib/job-board/adminAccess.js';
 import {
   internalSecretMatches,
   readBearerToken,
@@ -94,11 +94,11 @@ async function authorizeRequest(request, options) {
 
   const { data: profile, error: profileError } = await options.service
     .from('member_profiles')
-    .select('position')
+    .select('access_role, manager_permissions')
     .eq('user_id', userData.user.id)
     .maybeSingle();
   if (profileError) return { ok: false, status: 500, error: 'Admin lookup failed' };
-  if (!positionIsJobBoardAdmin(profile?.position)) {
+  if (!profileCanManageJobBoard(profile)) {
     return { ok: false, status: 403, error: 'Forbidden' };
   }
 

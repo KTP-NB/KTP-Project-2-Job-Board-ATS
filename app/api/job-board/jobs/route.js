@@ -73,17 +73,10 @@ export async function GET(request) {
   const { data, error, count } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const applicationsByJobId = await getApplicationsByJobId(
-    service,
-    auth.user.id,
-    (data || []).map((job) => job.id)
-  );
-
   return NextResponse.json({
     jobs: (data || []).map((job) => toJobSummary({
       ...job,
       saved: savedJobIds.includes(job.id),
-      application: applicationsByJobId.get(job.id) || null,
     })),
     pagination: {
       page,
@@ -102,17 +95,6 @@ async function getSavedJobIds(service, userId) {
     .eq('user_id', userId);
   if (error) throw error;
   return (data || []).map((row) => row.job_id);
-}
-
-async function getApplicationsByJobId(service, userId, jobIds) {
-  if (!jobIds.length) return new Map();
-  const { data, error } = await service
-    .from('job_board_applications')
-    .select('id, job_id, status, notes, applied_at, next_follow_up_at, updated_at')
-    .eq('user_id', userId)
-    .in('job_id', jobIds);
-  if (error) throw error;
-  return new Map((data || []).map((row) => [row.job_id, row]));
 }
 
 async function getFilterOptions(service) {
@@ -149,7 +131,6 @@ function categoryDbValues(category) {
 }
 
 function employmentTypeDbValues(employmentType) {
-  if (employmentType === 'internship') return ['internship', 'new_grad'];
   return [employmentType];
 }
 
