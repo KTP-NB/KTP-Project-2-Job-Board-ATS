@@ -21,7 +21,7 @@ export default function JobBoardNav() {
             aria-current={isActive ? 'page' : undefined}
             className={`shrink-0 rounded-xl px-4 py-2 text-sm font-bold transition ${
               isActive
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25 ring-1 ring-blue-300/30'
+                ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/25'
                 : 'text-blue-50/80 hover:bg-white/10 hover:text-white'
             }`}
           >
