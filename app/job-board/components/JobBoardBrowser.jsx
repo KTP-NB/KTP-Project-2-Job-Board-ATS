@@ -28,17 +28,31 @@ export default function JobBoardBrowser({ savedOnly = false }) {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(query.search), 300);
+    return () => clearTimeout(timer);
+  }, [query.search]);
 
   const queryString = useMemo(() => {
     const params = new URLSearchParams();
     params.set('page', String(pagination.page));
     params.set('perPage', String(pagination.perPage));
     if (savedOnly) params.set('saved', 'true');
-    for (const [key, value] of Object.entries(query)) {
+    for (const [key, value] of Object.entries({
+      search: debouncedSearch,
+      category: query.category,
+      employmentType: query.employmentType,
+      h1bStatus: query.h1bStatus,
+      workplaceType: query.workplaceType,
+      company: query.company,
+      postedToday: query.postedToday,
+    })) {
       if (value) params.set(key, String(value));
     }
     return params.toString();
-  }, [pagination.page, pagination.perPage, query, savedOnly]);
+  }, [pagination.page, pagination.perPage, debouncedSearch, query.category, query.employmentType, query.h1bStatus, query.workplaceType, query.company, query.postedToday, savedOnly]);
 
   useEffect(() => {
     let isMounted = true;

@@ -1,12 +1,19 @@
 import { NextResponse } from 'next/server';
 import { requireJobBoardUser } from '@/lib/job-board/auth';
-import { DEFAULT_JOBS_PER_PAGE, JOBS_PER_PAGE_OPTIONS } from '@/lib/job-board/constants';
+import { CAREER_CATEGORIES, DEFAULT_JOBS_PER_PAGE, JOB_EMPLOYMENT_TYPES, JOBS_PER_PAGE_OPTIONS, JOB_WORKPLACE_TYPES } from '@/lib/job-board/constants';
+import { loadJobFilterOptions } from '@/lib/job-board/filterOptions';
 import { getJobBoardServiceClient } from '@/lib/job-board/supabaseServer';
 import { inferDisplayEmploymentType, normalizeDisplayCareerCategory, toJobSummary } from '@/lib/job-board/models';
+import { normalizeJobSearch } from '@/lib/job-board/validation';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const runtime = 'nodejs';
+
+const FILTER_CACHE_MS = 60_000;
+let filterCache = null;
+let filterCachedAt = 0;
+let pendingFilters = null;
 
 export async function GET(request) {
   const auth = await requireJobBoardUser(request);
@@ -14,7 +21,10 @@ export async function GET(request) {
 
   const url = new URL(request.url);
   const params = url.searchParams;
-  const page = Math.max(1, Number(params.get('page') || 1));
+  const page = Number(params.get('page') || 1);
+  if (!Number.isInteger(page) || page < 1 || page > 10000) {
+    return NextResponse.json({ error: 'Invalid page.' }, { status: 400 });
+  }
   const requestedPerPage = Number(params.get('perPage') || DEFAULT_JOBS_PER_PAGE);
   const perPage = JOBS_PER_PAGE_OPTIONS.includes(requestedPerPage)
     ? requestedPerPage
@@ -41,22 +51,24 @@ export async function GET(request) {
     .order('posted_at', { ascending: false, nullsFirst: false })
     .range(from, to);
 
-  const search = params.get('search')?.trim();
+  const search = normalizeJobSearch(params.get('search'));
   if (search) {
-    const safeSearch = search.replaceAll('%', '\\%').replaceAll(',', ' ');
-    query = query.or(`title.ilike.%${safeSearch}%,company.ilike.%${safeSearch}%,description.ilike.%${safeSearch}%`);
+    query = query.or(`title.ilike.%${search}%,company.ilike.%${search}%,description.ilike.%${search}%`);
   }
 
   const category = params.get('category');
+  if (category && !CAREER_CATEGORIES.includes(category)) return NextResponse.json({ error: 'Invalid category.' }, { status: 400 });
   if (category) query = query.in('career_category', categoryDbValues(category));
 
   const employmentType = params.get('employmentType');
+  if (employmentType && !JOB_EMPLOYMENT_TYPES.includes(employmentType)) return NextResponse.json({ error: 'Invalid role type.' }, { status: 400 });
   if (employmentType) query = query.in('employment_type', employmentTypeDbValues(employmentType));
 
   const h1bStatus = params.get('h1bStatus');
   if (h1bStatus) query = applyH1bFilter(query, h1bStatus);
 
   const workplaceType = params.get('workplaceType');
+  if (workplaceType && !JOB_WORKPLACE_TYPES.includes(workplaceType)) return NextResponse.json({ error: 'Invalid workplace type.' }, { status: 400 });
   if (workplaceType) query = query.eq('workplace_type', workplaceType);
 
   const company = params.get('company');
@@ -98,22 +110,15 @@ async function getSavedJobIds(service, userId) {
 }
 
 async function getFilterOptions(service) {
-  const { data } = await service
-    .from('job_board_jobs')
-    .select('company, career_category, employment_type, workplace_type, title, source_url, source_payload, visa_sponsorship_status')
-    .eq('status', 'open');
-
-  return {
-    companies: uniqueSorted(data?.map((job) => job.company)),
-    categories: uniqueSorted(data?.map((job) => normalizeDisplayCareerCategory(job.career_category))),
-    employmentTypes: uniqueSorted(data?.map((job) => inferDisplayEmploymentType(job))),
-    workplaceTypes: uniqueSorted(data?.map((job) => job.workplace_type)),
-    h1bStatuses: uniqueSorted(data?.map((job) => job.visa_sponsorship_status).filter((value) => value && value !== 'unknown')),
-  };
-}
-
-function uniqueSorted(values = []) {
-  return [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  if (filterCache && Date.now() - filterCachedAt < FILTER_CACHE_MS) return filterCache;
+  if (!pendingFilters) {
+    pendingFilters = loadJobFilterOptions(service).then((filters) => {
+      filterCache = filters;
+      filterCachedAt = Date.now();
+      return filters;
+    }).finally(() => { pendingFilters = null; });
+  }
+  return pendingFilters;
 }
 
 function startOfTodayIso() {
