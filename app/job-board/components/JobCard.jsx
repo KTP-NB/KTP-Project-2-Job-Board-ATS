@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { APPLICATION_STATUSES } from '@/lib/job-board/constants';
+import { applicationLinkLabel } from '@/lib/job-board/applicationLink';
 
 export default function JobCard({ job, onToggleSaved, onUpdateApplication }) {
   return (
@@ -33,7 +34,7 @@ export default function JobCard({ job, onToggleSaved, onUpdateApplication }) {
               rel="noreferrer"
               className="rounded-full bg-white px-4 py-2 text-center text-sm font-bold text-slate-950 transition hover:bg-blue-100"
             >
-              Apply
+              {applicationLinkLabel(job.applyUrl)}
             </a>
           ) : (
             <button

@@ -563,6 +563,7 @@ function JobBoardAdminPanel() {
   const [overview, setOverview] = useState(null);
   const [sources, setSources] = useState([]);
   const [h1bSources, setH1bSources] = useState([]);
+  const [backupSources, setBackupSources] = useState([]);
   const [busy, setBusy] = useState(null);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -573,11 +574,13 @@ function JobBoardAdminPanel() {
       jobBoardApi('/api/job-board/admin/overview'),
       jobBoardApi('/api/job-board/admin/sources?provider=intern_list'),
       jobBoardApi('/api/job-board/admin/sources?provider=jobright_h1b'),
+      jobBoardApi('/api/job-board/admin/sources'),
     ])
-      .then(([overviewData, sourceData, h1bSourceData]) => {
+      .then(([overviewData, sourceData, h1bSourceData, allSourceData]) => {
         setOverview(overviewData);
         setSources(sourceData.sources || []);
         setH1bSources(h1bSourceData.sources || []);
+        setBackupSources((allSourceData.sources || []).filter((source) => ['jobright', 'simplify'].includes(source.provider)));
       })
       .catch((err) => setError(err.message || 'Unable to load Job Board admin data.'));
   }, []);
@@ -810,7 +813,7 @@ function JobBoardAdminPanel() {
           <div className="rounded-xl border border-white/10 bg-white/5 p-4">
             <div className="flex flex-col gap-1">
               <h3 className="text-sm font-black uppercase tracking-wide text-blue-100">H1B sources</h3>
-              <p className="text-sm text-white/50">Enable, disable, or run H1B-friendly software engineering ingestion independently.</p>
+              <p className="text-sm text-white/50">Scheduled twice daily at 00:00 and 12:00 UTC. Each source can also be run independently.</p>
             </div>
             <div className="mt-4 grid gap-3 lg:grid-cols-2">
               {h1bSources.length ? h1bSources.map((source) => (
@@ -824,6 +827,24 @@ function JobBoardAdminPanel() {
               )) : (
                 <p className="text-sm text-white/50">No H1B sources configured.</p>
               )}
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+            <div className="flex flex-col gap-1">
+              <h3 className="text-sm font-black uppercase tracking-wide text-blue-100">Backup GitHub sources</h3>
+              <p className="text-sm text-white/50">Jobright and Simplify are not scheduled. Run one enabled source at a time.</p>
+            </div>
+            <div className="mt-4 grid gap-3 lg:grid-cols-2">
+              {backupSources.map((source) => (
+                <SourceControlCard
+                  key={source.id}
+                  source={source}
+                  busy={busy}
+                  onToggle={toggleSource}
+                  onRun={runGithubSource}
+                />
+              ))}
             </div>
           </div>
 
@@ -899,7 +920,7 @@ function SourceControlCard({ source, busy, onToggle, onRun }) {
         <button
           type="button"
           onClick={() => onRun(source)}
-          disabled={Boolean(busy) || sourceLocked}
+          disabled={Boolean(busy) || sourceLocked || !source.enabled}
           className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-500 disabled:opacity-60"
         >
           {busy === source.id ? 'Working...' : sourceLocked ? 'Already running' : 'Run source'}

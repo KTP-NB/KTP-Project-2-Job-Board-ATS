@@ -13,10 +13,11 @@ export async function POST(request) {
   if (auth.error) return auth.error;
 
   const body = await readJson(request);
+  if (!body.sourceId) return jsonError('Choose one GitHub source to run.');
   try {
     const summary = await runGithubIngestion({
       service: getJobBoardServiceClient(),
-      sourceId: body.sourceId || null,
+      sourceId: body.sourceId,
     });
     return NextResponse.json({ summary });
   } catch (error) {

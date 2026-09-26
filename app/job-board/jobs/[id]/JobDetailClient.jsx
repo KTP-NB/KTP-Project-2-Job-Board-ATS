@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { jobBoardApi } from '@/lib/job-board/clientFetch';
+import { applicationLinkLabel } from '@/lib/job-board/applicationLink';
 import AtsResultPanel from '../../components/AtsResultPanel';
 import JobBoardLoading from '../../components/JobBoardLoading';
 
@@ -55,7 +56,7 @@ export default function JobDetailClient({ jobId }) {
                   rel="noreferrer"
                   className="rounded-full bg-white px-5 py-3 text-center text-sm font-bold text-slate-950 transition hover:bg-blue-100"
                 >
-                  Apply on company site
+                  {applicationLinkLabel(job.applyUrl)}
                 </a>
               ) : null}
               <button
