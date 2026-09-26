@@ -29,6 +29,9 @@ Deno.serve(async (request) => {
   if (!supabaseUrl || !serviceRoleKey || !anonKey) {
     return json({ error: 'Supabase function credentials are not configured.' }, 500);
   }
+  if (!githubToken) {
+    return json({ error: 'GitHub ingestion is not configured.' }, 503);
+  }
 
   const service = createClient(supabaseUrl, serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -52,6 +55,7 @@ Deno.serve(async (request) => {
     const summary = await runGithubIngestion({
       service,
       sourceId: typeof body.sourceId === 'string' && body.sourceId ? body.sourceId : null,
+      provider: body.provider === 'jobright_h1b' ? 'jobright_h1b' : null,
       timeoutMs: 15000,
       leaseSeconds: 900,
       staleAfterDays: 7,
