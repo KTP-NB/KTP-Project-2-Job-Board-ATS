@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ExternalLink, Play, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { jobBoardApi } from '@/lib/job-board/clientFetch';
 import { CAREER_CATEGORIES, JOB_EMPLOYMENT_TYPES } from '@/lib/job-board/constants';
+import { formatAdminJobBoardSummary } from '@/lib/job-board/adminJobs';
 
 const SOURCE_GROUPS = [
   { title: 'US internships', providers: ['intern_list'] },
@@ -42,7 +43,11 @@ export default function JobBoardAdminPanel() {
     try {
       const result = await action();
       const summary = result?.summary || result;
-      setMessage(`${label}: ${formatSummary(summary)}`);
+      if (summary?.failed > 0) {
+        setError(`${label}: ${formatAdminJobBoardSummary(summary)}`);
+      } else {
+        setMessage(`${label}: ${formatAdminJobBoardSummary(summary)}`);
+      }
       await refresh();
       return true;
     } catch (err) {
@@ -191,10 +196,4 @@ function Metric({ label, value }) {
 
 function formatDate(value) {
   return value ? new Date(value).toLocaleString() : 'never';
-}
-
-function formatSummary(summary) {
-  if (typeof summary?.inserted === 'number') return `${summary.inserted} inserted, ${summary.updated || 0} updated, ${summary.failed || 0} failed`;
-  if (typeof summary?.archivedJobs === 'number') return `${summary.archivedJobs} jobs archived`;
-  return 'complete';
 }
