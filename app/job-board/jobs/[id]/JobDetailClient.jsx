@@ -60,7 +60,7 @@ export default function JobDetailClient({ jobId }) {
                 </a>
               ) : null}
               <Link
-                href={`/applications?jobBoardJob=${encodeURIComponent(job.id)}`}
+                href={`/job-board/applications?jobBoardJob=${encodeURIComponent(job.id)}`}
                 className="rounded-full border border-white/20 px-5 py-3 text-center text-sm font-bold text-white hover:bg-white/10"
               >
                 Track application

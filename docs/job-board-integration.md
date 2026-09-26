@@ -5,8 +5,8 @@ This branch is based on KTP-NB/ktp-website `master` at `91f11c3` and carries the
 ## Member workflow
 
 - Members, pledges, inactive members, and alumni with an authenticated `access_role` may use the Job Board. The existing website login/session is authoritative. The Job Board does not impose active-status checks.
-- Job Board cards link to the website's existing `/applications` tracker with a prefilled draft. Merely following the link does not create an application or count toward a monthly target.
-- The old Job Board application endpoint is removed. `/job-board/applications` redirects to `/applications`.
+- Job Board cards link to the website's existing application tracker at `/job-board/applications` with a prefilled draft. Merely following the link does not create an application or count toward a monthly target.
+- The old Job Board application endpoint is removed. The legacy `/applications` URL redirects to `/job-board/applications`, preserving a valid job-prefill query. The Member Account nav no longer links to Applications.
 - The single legacy Job Board application row in the linked project is a demo `/mock-careers` row; the one-time transfer script excludes it. Run `node scripts/migrate-legacy-job-board-applications.mjs` for a dry run before considering `--apply` on another database.
 - Resume retrieval reads the website's `member_resumes` pointer and uses the existing protected storage path.
 
@@ -22,6 +22,8 @@ This branch is based on KTP-NB/ktp-website `master` at `91f11c3` and carries the
 ## Deployment boundary
 
 Do **not** run `supabase db push` from this branch as-is. On 2026-09-26, `supabase migration list` showed both remote-only website migration versions (starting `20260820201953`) and local-only website versions (for example `20260820202818`), plus other divergences. The live database already contains tables from both lines. First compare the SQL and resulting schema of each divergent version against the canonical website migration history, then create a reconciled migration directory or an explicitly reviewed repair plan. Avoid marking migrations applied solely to silence the CLI.
+
+The 2026-09-26 ingestion check ran all ten enabled Intern List sources successfully. A Supabase lookup for a large source previously generated a URL above 15 KB and failed with `UND_ERR_HEADERS_OVERFLOW`; lookup batches are now capped at 50 values. The `job-intern-list-ingest` Edge Function was deployed independently, but the daily Cron migration and its secret configuration remain pending.
 
 The Edge Function on this branch also contains the updated website role check. It has not been redeployed as part of this local integration. Deploy it only after migration reconciliation and verifying function secrets and Cron configuration in the target Supabase project.
 

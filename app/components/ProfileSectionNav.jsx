@@ -7,7 +7,6 @@ import { MEMBER_PERMISSIONS, roleHasMemberPermission } from '@/lib/memberAccess'
 
 const items = [
   { label: 'Profile', href: '/profile' },
-  { label: 'Applications', href: '/applications' },
   { label: 'Fines', href: '/fines' },
   { label: 'Resume', href: '/resume' },
   { label: 'API & Integrations', href: '/integrations', permission: MEMBER_PERMISSIONS.INTEGRATIONS },

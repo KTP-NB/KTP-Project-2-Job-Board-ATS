@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import ApplicationsTracker from './ApplicationsTracker';
 
 export default function ApplicationsPage() {
-  redirect('/applications');
+  return <ApplicationsTracker />;
 }
