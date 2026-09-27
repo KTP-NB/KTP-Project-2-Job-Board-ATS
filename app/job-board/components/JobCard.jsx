@@ -14,6 +14,7 @@ export default function JobCard({ job, onToggleSaved }) {
           </Link>
           <p className="mt-3 line-clamp-2 text-sm leading-6 text-blue-50/75">{job.description}</p>
           <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold uppercase tracking-wide text-blue-50">
+            {job.status !== 'open' ? <span className="rounded-full bg-amber-400/20 px-3 py-1 text-amber-50">No longer listed</span> : null}
             <span className="rounded-full bg-blue-500/25 px-3 py-1">{job.location}</span>
             <span className="rounded-full bg-blue-500/25 px-3 py-1">{formatOption(job.workplaceType)}</span>
             <span className="rounded-full bg-blue-500/25 px-3 py-1">{formatOption(job.employmentType)}</span>
@@ -26,7 +27,7 @@ export default function JobCard({ job, onToggleSaved }) {
         </div>
 
         <div className="flex shrink-0 flex-col gap-3 sm:flex-row lg:w-64 lg:flex-col">
-          {job.applyUrl ? (
+          {job.applyUrl && job.status === 'open' ? (
             <a
               href={job.applyUrl}
               target="_blank"

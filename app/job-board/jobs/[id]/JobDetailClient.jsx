@@ -49,7 +49,7 @@ export default function JobDetailClient({ jobId }) {
               </p>
             </div>
             <div className="flex shrink-0 flex-col gap-3 sm:flex-row lg:flex-col">
-              {job.applyUrl ? (
+              {job.applyUrl && job.status === 'open' ? (
                 <a
                   href={job.applyUrl}
                   target="_blank"
@@ -76,6 +76,7 @@ export default function JobDetailClient({ jobId }) {
             </div>
           </div>
           <div className="mt-5 flex flex-wrap gap-2 text-xs font-bold uppercase tracking-wide text-blue-50">
+            {job.status !== 'open' ? <span className="rounded-full bg-amber-400/20 px-3 py-1 text-amber-50">No longer listed</span> : null}
             <span className="rounded-full bg-blue-500/25 px-3 py-1">{job.location}</span>
             <span className="rounded-full bg-blue-500/25 px-3 py-1">{formatOption(job.workplaceType)}</span>
             <span className="rounded-full bg-blue-500/25 px-3 py-1">{formatOption(job.employmentType)}</span>

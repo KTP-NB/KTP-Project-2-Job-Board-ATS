@@ -47,9 +47,9 @@ export async function GET(request) {
   let query = service
     .from('job_board_jobs')
     .select('*', { count: 'exact' })
-    .eq('status', 'open')
     .order('posted_at', { ascending: false, nullsFirst: false })
     .range(from, to);
+  if (!savedOnly) query = query.eq('status', 'open');
 
   const search = normalizeJobSearch(params.get('search'));
   if (search) {

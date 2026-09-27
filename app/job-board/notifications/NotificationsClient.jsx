@@ -79,6 +79,13 @@ export default function NotificationsClient() {
                     View job
                   </Link>
                 ) : null}
+                {item.type === 'digest' ? (
+                  <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm font-bold text-blue-200">
+                    {item.metadata?.new_job_ids?.length ? <Link href="/job-board" className="hover:text-white">New jobs</Link> : null}
+                    {item.metadata?.saved_job_ids?.length ? <Link href="/job-board/saved" className="hover:text-white">Saved jobs</Link> : null}
+                    {item.metadata?.recommended_job_ids?.length ? <Link href="/job-board/recommendations" className="hover:text-white">Recommendations</Link> : null}
+                  </div>
+                ) : null}
               </div>
               {!item.read_at ? (
                 <button type="button" onClick={() => markOneRead(item.id)} className="shrink-0 rounded-full border border-white/15 px-3 py-2 text-xs font-bold text-blue-50 hover:bg-white/10">
