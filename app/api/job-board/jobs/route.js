@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server';
 import { requireJobBoardUser } from '@/lib/job-board/auth';
 import { CAREER_CATEGORIES, DEFAULT_JOBS_PER_PAGE, JOB_EMPLOYMENT_TYPES, JOBS_PER_PAGE_OPTIONS, JOB_WORKPLACE_TYPES } from '@/lib/job-board/constants';
 import { loadJobFilterOptions } from '@/lib/job-board/filterOptions';
+import { applyEmploymentTypeFilter } from '@/lib/job-board/employmentFilter';
 import { getJobBoardServiceClient } from '@/lib/job-board/supabaseServer';
-import { inferDisplayEmploymentType, normalizeDisplayCareerCategory, toJobSummary } from '@/lib/job-board/models';
+import { toJobSummary } from '@/lib/job-board/models';
 import { normalizeJobSearch } from '@/lib/job-board/validation';
 
 export const dynamic = 'force-dynamic';
@@ -62,7 +63,7 @@ export async function GET(request) {
 
   const employmentType = params.get('employmentType');
   if (employmentType && !JOB_EMPLOYMENT_TYPES.includes(employmentType)) return NextResponse.json({ error: 'Invalid role type.' }, { status: 400 });
-  if (employmentType) query = query.in('employment_type', employmentTypeDbValues(employmentType));
+  if (employmentType) query = applyEmploymentTypeFilter(query, employmentType);
 
   const h1bStatus = params.get('h1bStatus');
   if (h1bStatus) query = applyH1bFilter(query, h1bStatus);
@@ -133,10 +134,6 @@ function categoryDbValues(category) {
     machine_learning_ai: ['machine_learning_ai', 'machine_learning'],
   };
   return values[category] || [category];
-}
-
-function employmentTypeDbValues(employmentType) {
-  return [employmentType];
 }
 
 function applyH1bFilter(query, h1bStatus) {

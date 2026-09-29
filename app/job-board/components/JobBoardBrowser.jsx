@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { jobBoardApi } from '@/lib/job-board/clientFetch';
 import { DEFAULT_JOBS_PER_PAGE, JOBS_PER_PAGE_OPTIONS } from '@/lib/job-board/constants';
+import { buildJobsQueryString } from '@/lib/job-board/browserQuery';
 import JobBoardEmptyState from './JobBoardEmptyState';
 import JobCard from './JobCard';
 import JobFilters from './JobFilters';
@@ -29,6 +30,7 @@ export default function JobBoardBrowser({ savedOnly = false }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const hasActiveFilters = Object.values(query).some(Boolean);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(query.search), 300);
@@ -36,11 +38,10 @@ export default function JobBoardBrowser({ savedOnly = false }) {
   }, [query.search]);
 
   const queryString = useMemo(() => {
-    const params = new URLSearchParams();
-    params.set('page', String(pagination.page));
-    params.set('perPage', String(pagination.perPage));
-    if (savedOnly) params.set('saved', 'true');
-    for (const [key, value] of Object.entries({
+    return buildJobsQueryString({
+      page: pagination.page,
+      perPage: pagination.perPage,
+      savedOnly,
       search: debouncedSearch,
       category: query.category,
       employmentType: query.employmentType,
@@ -48,10 +49,7 @@ export default function JobBoardBrowser({ savedOnly = false }) {
       workplaceType: query.workplaceType,
       company: query.company,
       postedToday: query.postedToday,
-    })) {
-      if (value) params.set(key, String(value));
-    }
-    return params.toString();
+    });
   }, [pagination.page, pagination.perPage, debouncedSearch, query.category, query.employmentType, query.h1bStatus, query.workplaceType, query.company, query.postedToday, savedOnly]);
 
   useEffect(() => {
@@ -86,6 +84,11 @@ export default function JobBoardBrowser({ savedOnly = false }) {
     setPagination((current) => ({ ...current, page: 1 }));
   };
 
+  const clearFilters = () => {
+    setQuery({ search: '', category: '', employmentType: '', h1bStatus: '', workplaceType: '', company: '', postedToday: false });
+    setPagination((current) => ({ ...current, page: 1 }));
+  };
+
   const toggleSaved = async (job) => {
     const nextSaved = !job.saved;
     setJobs((current) => current.map((item) => (item.id === job.id ? { ...item, saved: nextSaved } : item)));
@@ -103,7 +106,7 @@ export default function JobBoardBrowser({ savedOnly = false }) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-5 shadow-xl backdrop-blur">
+      <div className="relative z-20 rounded-2xl border border-white/10 bg-white/[0.06] p-5 shadow-xl backdrop-blur">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.25em] text-blue-200">
@@ -125,6 +128,11 @@ export default function JobBoardBrowser({ savedOnly = false }) {
           onQueryChange={updateQuery}
           onPerPageChange={(perPage) => setPagination((current) => ({ ...current, page: 1, perPage }))}
         />
+        {hasActiveFilters ? (
+          <button type="button" onClick={clearFilters} className="mt-3 text-sm font-semibold text-blue-200 hover:text-white">
+            Clear filters
+          </button>
+        ) : null}
       </div>
 
       {error ? <p className="rounded-xl bg-red-500/15 px-4 py-3 text-sm font-bold text-red-100">{error}</p> : null}
@@ -157,7 +165,10 @@ export default function JobBoardBrowser({ savedOnly = false }) {
       ) : (
         <JobBoardEmptyState
           title={savedOnly ? 'No saved jobs yet' : 'No jobs found'}
-          message={savedOnly ? 'Save jobs from the main Job Board search view.' : 'Run GitHub ingestion from the Job Board admin tab or clear filters.'}
+          message={hasActiveFilters
+            ? (query.h1bStatus ? 'No current H1B listings match these filters.' : 'No current jobs match these filters.')
+            : (savedOnly ? 'Save jobs from the main Job Board search view.' : 'No current listings are available.')}
+          action={hasActiveFilters ? <button type="button" onClick={clearFilters} className="rounded-lg bg-blue-500 px-4 py-2 text-sm font-bold text-white hover:bg-blue-400">Clear filters</button> : null}
         />
       )}
     </div>
