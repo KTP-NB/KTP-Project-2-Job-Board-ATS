@@ -17,9 +17,10 @@ export async function POST(request) {
     const summary = await runInternListIngestion({
       service: getJobBoardServiceClient(),
       sourceId: body.sourceId || null,
+      provider: body.provider === 'new_grad_jobs' ? 'new_grad_jobs' : 'intern_list',
     });
     return NextResponse.json({ summary });
   } catch (error) {
-    return jsonError(error.message || 'Intern List ingestion failed.', error.status || 500);
+    return jsonError(error.message || 'Airtable ingestion failed.', error.status || 500);
   }
 }

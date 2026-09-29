@@ -8,6 +8,7 @@ import { formatAdminJobBoardSummary } from '@/lib/job-board/adminJobs';
 
 const SOURCE_GROUPS = [
   { title: 'US internships', providers: ['intern_list'] },
+  { title: 'US new grad jobs', providers: ['new_grad_jobs'] },
   { title: 'H1B software engineering', providers: ['jobright_h1b'] },
   { title: 'Backup GitHub sources', providers: ['jobright', 'simplify'] },
 ];
@@ -59,12 +60,12 @@ export default function JobBoardAdminPanel() {
   }
 
   function runSource(source) {
-    const endpoint = source.provider === 'intern_list'
+    const endpoint = ['intern_list', 'new_grad_jobs'].includes(source.provider)
       ? '/api/job-board/admin/intern-list-ingest'
       : '/api/job-board/admin/github-ingest';
     return run(source.source_name, () => jobBoardApi(endpoint, {
       method: 'POST',
-      body: JSON.stringify({ sourceId: source.id }),
+      body: JSON.stringify({ sourceId: source.id, provider: source.provider }),
     }));
   }
 

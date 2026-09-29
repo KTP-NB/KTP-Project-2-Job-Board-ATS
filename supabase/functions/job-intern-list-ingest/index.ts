@@ -35,16 +35,17 @@ Deno.serve(async (request) => {
     const summary = await runInternListIngestion({
       service,
       sourceId: body.sourceId,
+      provider: body.provider === 'new_grad_jobs' ? 'new_grad_jobs' : 'intern_list',
       timeoutMs: 15000,
       leaseSeconds: 900,
       staleAfterDays: 7,
     });
     return json({ summary });
   } catch (error) {
-    console.error('[job-board] Intern List Edge ingestion failed.', {
+    console.error('[job-board] Airtable Edge ingestion failed.', {
       message: error?.message || 'Unknown ingestion failure',
     });
-    return json({ error: 'Intern List ingestion failed.' }, 500);
+    return json({ error: 'Airtable ingestion failed.' }, 500);
   }
 });
 

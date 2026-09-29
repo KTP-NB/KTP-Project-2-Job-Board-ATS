@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireJobBoardUser } from '@/lib/job-board/auth';
 import { CAREER_CATEGORIES, DEFAULT_JOBS_PER_PAGE, JOB_EMPLOYMENT_TYPES, JOBS_PER_PAGE_OPTIONS, JOB_WORKPLACE_TYPES } from '@/lib/job-board/constants';
 import { loadJobFilterOptions } from '@/lib/job-board/filterOptions';
+import { newYorkDayBounds } from '@/lib/job-board/postingDates';
 import { applyEmploymentTypeFilter } from '@/lib/job-board/employmentFilter';
 import { getJobBoardServiceClient } from '@/lib/job-board/supabaseServer';
 import { toJobSummary } from '@/lib/job-board/models';
@@ -76,7 +77,8 @@ export async function GET(request) {
   if (company) query = query.eq('company', company);
 
   if (params.get('postedToday') === 'true') {
-    query = query.gte('posted_at', startOfTodayIso());
+    const { start, end } = newYorkDayBounds();
+    query = query.gte('posted_at', start).lt('posted_at', end);
   }
 
   if (savedOnly) {
@@ -120,11 +122,6 @@ async function getFilterOptions(service) {
     }).finally(() => { pendingFilters = null; });
   }
   return pendingFilters;
-}
-
-function startOfTodayIso() {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
 }
 
 function categoryDbValues(category) {
