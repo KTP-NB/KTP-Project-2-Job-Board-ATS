@@ -4,15 +4,11 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { jobBoardApi } from '@/lib/job-board/clientFetch';
 import { applicationLinkLabel } from '@/lib/job-board/applicationLink';
-import AtsResultPanel from '../../components/AtsResultPanel';
 import JobBoardLoading from '../../components/JobBoardLoading';
 
 export default function JobDetailClient({ jobId }) {
   const [job, setJob] = useState(null);
-  const [analysis, setAnalysis] = useState(null);
-  const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState('');
-  const [analysisError, setAnalysisError] = useState('');
 
   useEffect(() => {
     let isMounted = true;
@@ -65,14 +61,6 @@ export default function JobDetailClient({ jobId }) {
               >
                 Track application
               </Link>
-              <button
-                type="button"
-                onClick={runJobAnalysis}
-                disabled={analyzing}
-                className="rounded-full bg-blue-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {analyzing ? 'Analyzing...' : 'Analyze resume'}
-              </button>
             </div>
           </div>
           <div className="mt-5 flex flex-wrap gap-2 text-xs font-bold uppercase tracking-wide text-blue-50">
@@ -91,7 +79,6 @@ export default function JobDetailClient({ jobId }) {
               {job.visaSponsorshipNotes}
             </p>
           ) : null}
-          {analysisError ? <p className="mt-5 rounded-xl bg-red-500/15 px-4 py-3 text-sm font-bold text-red-100">{analysisError}</p> : null}
         </header>
 
         <JobSection title="Responsibilities" items={job.responsibilities} />
@@ -99,25 +86,8 @@ export default function JobDetailClient({ jobId }) {
         <JobSection title="Benefits" items={job.benefits} />
       </article>
 
-      {analysis ? <AtsResultPanel analysis={analysis} /> : null}
     </div>
   );
-
-  async function runJobAnalysis() {
-    setAnalyzing(true);
-    setAnalysisError('');
-    try {
-      const data = await jobBoardApi('/api/job-board/ats-analyze', {
-        method: 'POST',
-        body: JSON.stringify({ jobId }),
-      });
-      setAnalysis(data.analysis);
-    } catch (err) {
-      setAnalysisError(err.message || 'Unable to analyze resume.');
-    } finally {
-      setAnalyzing(false);
-    }
-  }
 }
 
 function JobSection({ title, items }) {

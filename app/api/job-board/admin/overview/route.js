@@ -14,11 +14,10 @@ export async function GET(request) {
 
   try {
     const service = getJobBoardServiceClient();
-    const [jobs, saved, apps, analyses, notifications, scraperRuns, ingestionRuns, logs, analytics] = await Promise.all([
+    const [jobs, saved, apps, notifications, scraperRuns, ingestionRuns, logs, analytics] = await Promise.all([
       service.from('job_board_jobs').select('id', { count: 'exact', head: true }).eq('status', 'open'),
       service.from('job_board_saved_jobs').select('id', { count: 'exact', head: true }),
       service.from('internship_applications').select('id', { count: 'exact', head: true }),
-      service.from('job_board_ats_analyses').select('id', { count: 'exact', head: true }),
       service.from('job_board_notifications').select('id', { count: 'exact', head: true }),
       service.from('job_board_scraper_runs').select('*').order('created_at', { ascending: false }).limit(5),
       service.from('job_board_ingestion_runs').select('*').order('created_at', { ascending: false }).limit(5),
@@ -26,7 +25,7 @@ export async function GET(request) {
       analyticsSummary(service),
     ]);
 
-    for (const result of [jobs, saved, apps, analyses, notifications, scraperRuns, ingestionRuns, logs]) {
+    for (const result of [jobs, saved, apps, notifications, scraperRuns, ingestionRuns, logs]) {
       if (result.error) throw result.error;
     }
 
@@ -35,7 +34,6 @@ export async function GET(request) {
         openJobs: jobs.count || 0,
         savedJobs: saved.count || 0,
         applications: apps.count || 0,
-        atsAnalyses: analyses.count || 0,
         notifications: notifications.count || 0,
       },
       scraperRuns: scraperRuns.data || [],

@@ -112,11 +112,10 @@ export default function JobBoardAdminPanel() {
       {message && <p role="status" className="rounded-lg border border-emerald-400/25 bg-emerald-500/10 p-3 text-sm text-emerald-100">{message}</p>}
 
       {overview && (
-        <div className="grid grid-cols-2 gap-4 border-y border-white/10 py-4 text-sm sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 border-y border-white/10 py-4 text-sm sm:grid-cols-3">
           <Metric label="Open jobs" value={overview.counts?.openJobs} />
           <Metric label="Saved jobs" value={overview.counts?.savedJobs} />
           <Metric label="Applications" value={overview.counts?.applications} />
-          <Metric label="ATS analyses" value={overview.counts?.atsAnalyses} />
         </div>
       )}
 

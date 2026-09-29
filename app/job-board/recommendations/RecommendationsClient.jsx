@@ -47,7 +47,7 @@ export default function RecommendationsClient() {
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.25em] text-blue-200">Deterministic matches</p>
             <h2 className="mt-2 text-3xl font-black">Recommended Jobs</h2>
-            <p className="mt-2 text-sm text-blue-50/75">Recommendations use saved jobs, application activity, ATS checks, and recently posted roles.</p>
+            <p className="mt-2 text-sm text-blue-50/75">Recommendations use saved jobs, application activity, and recently posted roles.</p>
           </div>
           <button
             type="button"
@@ -95,7 +95,7 @@ export default function RecommendationsClient() {
       ) : (
         <JobBoardEmptyState
           title="No recommendations yet"
-          message="Refresh recommendations after saving jobs, tracking applications, or running ATS checks."
+          message="Refresh recommendations after saving jobs or tracking applications."
         />
       )}
     </div>
