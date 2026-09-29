@@ -1,6 +1,6 @@
 # Job Board notifications and retention
 
-The existing Job Board notifications page now receives a daily or weekly digest of new jobs, saved jobs awaiting application, and recommendations. Email is opt-in and disabled by default. SMS is not configured.
+The Job Board notifications page receives a daily or weekly digest of new jobs and saved jobs awaiting application. Recommendations are deferred. Email is opt-in and disabled by default. SMS is not configured.
 
 ## Deployment order
 

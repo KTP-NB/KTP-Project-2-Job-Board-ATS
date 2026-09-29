@@ -16,7 +16,7 @@ export default function JobBoardShell({ children }) {
                 Job Board
               </h1>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-blue-50/75">
-                Find opportunities, organize applications, and prepare better resumes.
+                Find opportunities and organize applications.
               </p>
             </div>
             <JobBoardNav />

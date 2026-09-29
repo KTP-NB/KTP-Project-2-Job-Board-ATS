@@ -35,7 +35,7 @@ export async function PUT(request) {
       in_app_enabled: body.in_app_enabled !== false,
       email_enabled: Boolean(body.email_enabled),
       immediate_notifications_enabled: body.immediate_notifications_enabled !== false,
-      recommendation_notifications_enabled: body.recommendation_notifications_enabled !== false,
+      recommendation_notifications_enabled: false,
       posted_today_notifications_enabled: body.posted_today_notifications_enabled !== false,
       digest_frequency: body.digest_frequency || 'weekly',
       keywords: Array.isArray(body.keywords) ? body.keywords : [],

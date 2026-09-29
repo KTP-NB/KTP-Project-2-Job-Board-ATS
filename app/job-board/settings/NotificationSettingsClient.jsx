@@ -6,7 +6,6 @@ import { jobBoardApi } from '@/lib/job-board/clientFetch';
 const booleanFields = [
   ['in_app_enabled', 'In-app notifications'],
   ['immediate_notifications_enabled', 'Immediate notifications'],
-  ['recommendation_notifications_enabled', 'Recommendation notifications'],
   ['posted_today_notifications_enabled', 'Posted-today notifications'],
   ['email_enabled', 'Email digest (opt in)'],
 ];

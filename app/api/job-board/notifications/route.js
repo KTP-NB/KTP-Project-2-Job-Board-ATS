@@ -17,6 +17,7 @@ export async function GET(request) {
     .from('job_board_notifications')
     .select('*, job_board_jobs ( id, title, company )')
     .eq('user_id', auth.user.id)
+    .neq('type', 'recommendation')
     .order('created_at', { ascending: false })
     .limit(50);
 
