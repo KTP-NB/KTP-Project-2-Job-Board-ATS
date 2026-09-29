@@ -3,7 +3,7 @@ import { requireJobBoardUser } from '@/lib/job-board/auth';
 import { CAREER_CATEGORIES, DEFAULT_JOBS_PER_PAGE, JOB_EMPLOYMENT_TYPES, JOBS_PER_PAGE_OPTIONS, JOB_WORKPLACE_TYPES } from '@/lib/job-board/constants';
 import { loadJobFilterOptions } from '@/lib/job-board/filterOptions';
 import { newYorkDayBounds } from '@/lib/job-board/postingDates';
-import { applyEmploymentTypeFilter } from '@/lib/job-board/employmentFilter';
+import { applyEmploymentTypeFilter, NEW_GRAD_FULL_TIME_FILTER } from '@/lib/job-board/employmentFilter';
 import { getJobBoardServiceClient } from '@/lib/job-board/supabaseServer';
 import { toJobSummary } from '@/lib/job-board/models';
 import { normalizeJobSearch } from '@/lib/job-board/validation';
@@ -63,7 +63,7 @@ export async function GET(request) {
   if (category) query = query.in('career_category', categoryDbValues(category));
 
   const employmentType = params.get('employmentType');
-  if (employmentType && !JOB_EMPLOYMENT_TYPES.includes(employmentType)) return NextResponse.json({ error: 'Invalid role type.' }, { status: 400 });
+  if (employmentType && !JOB_EMPLOYMENT_TYPES.includes(employmentType) && employmentType !== NEW_GRAD_FULL_TIME_FILTER) return NextResponse.json({ error: 'Invalid role type.' }, { status: 400 });
   if (employmentType) query = applyEmploymentTypeFilter(query, employmentType);
 
   const h1bStatus = params.get('h1bStatus');

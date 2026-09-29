@@ -4,7 +4,6 @@ import SelectMenu from '@/app/components/SelectMenu';
 import {
   CAREER_CATEGORIES,
   CAREER_CATEGORY_GROUPS,
-  JOB_EMPLOYMENT_TYPES,
   JOBS_PER_PAGE_OPTIONS,
 } from '@/lib/job-board/constants';
 
@@ -24,7 +23,7 @@ export default function JobFilters({ query, filters, perPage, onQueryChange, onP
         options={mergeOptions(CAREER_CATEGORIES, filters.categories)}
         groups={CAREER_CATEGORY_GROUPS}
       />
-      <Select label="Role Type" value={query.employmentType} onChange={(value) => onQueryChange({ employmentType: value })} options={mergeOptions(JOB_EMPLOYMENT_TYPES, filters.employmentTypes)} />
+      <Select label="Role Type" value={query.employmentType} onChange={(value) => onQueryChange({ employmentType: value })} options={filters.employmentTypes || []} />
       <Select
         label="H1B"
         value={query.h1bStatus}
@@ -90,6 +89,7 @@ function formatOption(value) {
     h1b_friendly: 'H1B Friendly',
     explicit_h1b_sponsor: 'Explicit H1B',
     likely_h1b_sponsor: 'Likely H1B',
+    new_grad_full_time: 'New Grad / Full-Time',
   };
   if (labels[value]) return labels[value];
   return String(value || '').replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
