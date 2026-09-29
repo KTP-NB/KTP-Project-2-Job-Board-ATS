@@ -36,6 +36,7 @@ end;
 $$;
 
 revoke all on function public.job_board_invoke_new_grad_ingest() from public, anon, authenticated;
+grant execute on function public.job_board_invoke_new_grad_ingest() to service_role;
 
 select cron.schedule(
   'job-board-new-grad-daily',
